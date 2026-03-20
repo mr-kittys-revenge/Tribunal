@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jury Duty Simulation - Full Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .screen {
+            display: none !important;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: block !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .box {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 20px 0 12px;
+            color: #2c3e50;
+        }
+
+        .text {
+            font-size: 15px;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ff6b6b;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 4px;
+        }
+
+        .header {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #1a1a1a;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        button.primary {
+            background: #2c3e50;
+            color: white;
+            border-color: #2c3e50;
+        }
+
+        button.primary:hover {
+            background: #1a252f;
+        }
+
+        button.guilt {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        button.guilt:hover {
+            background: #c0392b;
+        }
+
+        button.innocence {
+            background: #27ae60;
+            color: white;
+            border-color: #27ae60;
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        button.innocence:hover {
+            background: #229954;
+        }
+
+        .verdict-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .option-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-card:hover {
+            border-color: #999;
+            background: #f9f9f9;
+        }
+
+        .option-card.selected {
+            border-color: #2c3e50;
+            background: #ecf0f1;
+        }
+
+        .option-card input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .jury-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .juror-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .juror-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .juror-role {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .conviction-bar {
+            background: #e0e0e0;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 4px 0;
+        }
+
+        .conviction-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60 0%, #f39c12 50%, #e74c3c 100%);
+            transition: width 0.3s;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .day-box {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-box.completed {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .day-box.current {
+            background: #cce5ff;
+            border-color: #0066cc;
+            border-width: 2px;
+        }
+
+        .day-box:hover {
+            background: #f0f0f0;
+        }
+
+        .evidence-bubble {
+            display: inline-block;
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 20px;
+            padding: 8px 16px;
+            margin: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .evidence-bubble:hover {
+            background: #bbdefb;
+            border-color: #1976d2;
+        }
+
+        .evidence-bubble.noted {
+            background: #c8e6c9;
+            border-color: #4caf50;
+        }
+
+        .deliberation-panel {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .npc-statement {
+            background: #f9f9f9;
+            border-left: 4px solid #2c3e50;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 4px;
+        }
+
+        .npc-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .npc-statement-text {
+            font-style: italic;
+            color: #555;
+        }
+
+        .tally-display {
+            background: #ecf0f1;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .vote-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .verdict-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin: 4px;
+        }
+
+        .badge-guilty {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .badge-notguilty {
+            background: #27ae60;
+            color: white;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .result-verdict {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 12px 0;
+        }
+
+        .match-indicator {
+            font-size: 18px;
+            margin: 12px 0;
+        }
+
+        .match-indicator.agreed {
+            color: #27ae60;
+        }
+
+        .match-indicator.disagreed {
+            color: #e74c3c;
+        }
+
+        .real-case-box {
+            background: #f0f8ff;
+            border: 1px solid #b0e0e6;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- JURY SUMMONS SCREEN -->
+    <div id="summons-screen" class="screen active">
+        <div class="box">
+            <div class="title">⚖️ OFFICIAL JURY DUTY SUMMONS</div>
+            <div class="text" style="font-size: 13px; margin: 16px 0; text-align: center; letter-spacing: 2px;">
+                UNITED TRIBUNAL COURT
+            </div>
+            <div class="warning-box">
+                You have been randomly selected to serve as a juror in the United Tribunal Court.
+                Your service is mandatory and a fundamental responsibility of citizenship.
+            </div>
+            <div class="text">
+                <strong>REPORT DATE:</strong> Tomorrow, 8:00 AM<br>
+                <strong>LOCATION:</strong> United Tribunal Court, 100 Civic Center, Downtown<br>
+                <strong>JURY HOTLINE:</strong> 1-800-TRIBUNAL-1<br>
+            </div>
+            <div class="text">
+                <strong>IMPORTANT INSTRUCTIONS:</strong>
+            </div>
+            <div class="text">
+                You must call the jury hotline <strong>every morning at 8:00 AM for 7 consecutive days</strong>. The hotline will inform you whether you must report to the United Tribunal Court. Failure to call in or report is contempt of court.
+            </div>
+            <div class="warning-box">
+                ⚠️ FAILURE TO REPORT IS CONTEMPT OF COURT - Subject to fines and jail time
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="acceptSummons()">I UNDERSTAND - BEGIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALL-IN WEEK SCREEN -->
+    <div id="callin-screen" class="screen">
+        <div class="box">
+            <div class="title">📞 JURY HOTLINE - WEEK OF CALLS</div>
+            <div class="header">
+                <div class="header-stat">
+                    <div class="header-label">Current Day</div>
+                    <div class="header-value" id="callin-day">1 of 7</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Status</div>
+                    <div class="header-value" id="callin-status">Not Called</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Calls Made</div>
+                    <div class="header-value" id="calls-made">0</div>
+                </div>
+            </div>
+
+            <div class="calendar-grid" id="calendar-grid"></div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <div class="text" style="font-size: 16px; margin-bottom: 20px;">
+                    <strong id="callin-message">Ready to make your daily call?</strong>
+                </div>
+                <button class="primary" style="padding: 16px 40px; font-size: 16px;" onclick="callHotline()">CALL JURY HOTLINE</button>
+                <button style="margin-left: 12px; padding: 16px 40px; font-size: 16px;" onclick="declineJuryDuty()">DECLINE (Risk Consequences)</button>
+            </div>
+
+            <div id="callin-result" style="margin-top: 30px; text-align: center; font-size: 16px; font-weight: 600;"></div>
+        </div>
+    </div>
+
+    <!-- CASE ASSIGNMENT SCREEN -->
+    <div id="case-assignment-screen" class="screen">
+        <div class="box">
+            <div class="title">📋 CASE ASSIGNMENT</div>
+            <div class="text" style="text-align: center; margin: 30px 0; font-size: 18px; font-weight: 600;">
+                Your case has been randomly assigned...
+            </div>
+            <div id="case-card" style="background: #f9f9f9; border: 2px solid #2c3e50; border-radius: 8px; padding: 24px; margin: 20px 0;">
+                <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;" id="case-number"></div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 16px;" id="case-type"></div>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px;" id="case-name"></div>
+                <div style="font-size: 14px; margin-bottom: 16px;" id="case-desc"></div>
+                <div style="font-size: 13px; color: #666;" id="case-duration"></div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="proceedToVoirDire()">PROCEED TO JURY SELECTION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VOIR DIRE SCREEN -->
+    <div id="voir-dire-screen" class="screen">
+        <div class="box">
+            <div class="title">⚖️ JURY SELECTION - VOIR DIRE</div>
+            <div class="header">
+                <div class="header-stat">
+                    <div class="header-label">Question</div>
+                    <div class="header-value" id="voir-dire-progress">1 of 4</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Status</div>
+                    <div class="header-value" id="voir-dire-status">In Progress</div>
+                </div>
+            </div>
+
+            <div class="box" style="background: #ecf0f1; margin: 20px 0;">
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;" id="voir-dire-question"></div>
+                <div style="font-size: 13px; color: #555;" id="voir-dire-context"></div>
+            </div>
+
+            <div id="voir-dire-options"></div>
+
+            <div class="button-group">
+                <button class="primary" onclick="submitVoirDireAnswer()">NEXT QUESTION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRIAL SCREEN -->
+    <div id="trial-screen" class="screen">
+        <div class="box">
+            <div class="title" id="trial-title">⚖️ TRIAL - EVIDENCE PRESENTATION</div>
+            <div class="header">
+                <div class="header-stat">
+                    <div class="header-label">Defendant</div>
+                    <div class="header-value" id="defendant-name"></div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Charge</div>
+                    <div class="header-value" id="charge"></div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Day</div>
+                    <div class="header-value" id="trial-day">1</div>
+                </div>
+            </div>
+
+            <div class="subtitle">PROSECUTION'S CASE</div>
+            <div id="prosecution-case" style="margin-bottom: 20px;"></div>
+
+            <div class="subtitle">EVIDENCE</div>
+            <div id="evidence-list" style="margin-bottom: 20px;"></div>
+
+            <div class="subtitle">DEFENSE'S CASE</div>
+            <div id="defense-case" style="margin-bottom: 20px;"></div>
+
+            <div class="button-group">
+                <button class="primary" onclick="proceedToDeliberation()">PROCEED TO JURY DELIBERATION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELIBERATION SCREEN -->
+    <div id="deliberation-screen" class="screen">
+        <div class="box">
+            <div class="title" id="deliberation-title">📋 JURY DELIBERATION</div>
+            <div class="header">
+                <div class="header-stat">
+                    <div class="header-label">Round</div>
+                    <div class="header-value" id="current-round">1 of 4</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Status</div>
+                    <div class="header-value" id="deliberation-status">Voting</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Verdict</div>
+                    <div class="header-value" id="current-verdict">Undecided</div>
+                </div>
+            </div>
+
+            <div id="npc-discussion" class="deliberation-panel"></div>
+
+            <div class="tally-display" id="vote-tally"></div>
+
+            <div id="player-voting-section" style="display: none;">
+                <div class="subtitle">YOUR VOTE - JUROR 7</div>
+                <div style="margin: 20px 0;">
+                    <div style="font-size: 14px; margin-bottom: 12px; font-weight: 600;">Is the defendant GUILTY or NOT GUILTY?</div>
+                    <div class="vote-options" id="verdict-buttons"></div>
+                </div>
+
+                <div id="justification-section" style="display: none;">
+                    <div style="font-size: 14px; margin-bottom: 12px; font-weight: 600;">Why do you vote this way? (Select one)</div>
+                    <div id="justification-options"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="primary" id="submit-vote-btn" onclick="submitPlayerVote()" style="display: none;">SUBMIT VOTE</button>
+                </div>
+            </div>
+
+            <div id="discussion-phase" style="display: none;">
+                <div class="button-group">
+                    <button class="primary" onclick="showSpeakOptions()">SPEAK</button>
+                    <button onclick="continueDiscussion()">CONTINUE DISCUSSION</button>
+                </div>
+                <div id="speak-options" style="display: none; margin-top: 20px;"></div>
+            </div>
+
+            <div id="bathroom-break-section" style="display: none; margin-top: 30px;">
+                <div class="warning-box">
+                    <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">BATHROOM BREAK - TEMPTATIONS</div>
+                    <div style="margin-bottom: 20px;">You're alone in the bathroom. Three temptations present themselves...</div>
+                    <div id="temptation-options"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VERDICT SCREEN -->
+    <div id="verdict-screen" class="screen">
+        <div class="box">
+            <div class="title">⚖️ VERDICT ANNOUNCED</div>
+            <div style="text-align: center; font-size: 24px; font-weight: 700; margin: 40px 0; color: #2c3e50;">
+                <div id="final-verdict" style="margin-bottom: 20px;"></div>
+                <div style="font-size: 16px; color: #666;" id="verdict-by"></div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="proceedToResults()">VIEW RESULTS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="results-screen" class="screen">
+        <div class="box">
+            <div class="title">📊 CASE RESULTS</div>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-label">Your Verdict</div>
+                    <div class="result-verdict" id="player-verdict-result"></div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Jury Verdict</div>
+                    <div class="result-verdict" id="jury-verdict-result"></div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <div class="match-indicator" id="match-result"></div>
+            </div>
+
+            <div class="real-case-box" id="real-case-info"></div>
+
+            <div class="header">
+                <div class="header-stat">
+                    <div class="header-label">Credits Earned</div>
+                    <div class="header-value" id="credits-earned">0</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Total Credits</div>
+                    <div class="header-value" id="total-credits">0</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-label">Cases Completed</div>
+                    <div class="header-value" id="cases-completed">1</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="primary" onclick="nextCase()">NEXT CASE</button>
+                <button onclick="returnToMenu()">RETURN TO MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DECLINE CONSEQUENCE SCREEN -->
+    <div id="decline-screen" class="screen">
+        <div class="box">
+            <div class="title" id="decline-title">⚠️ CONSEQUENCE NOTICE</div>
+            <div id="decline-content"></div>
+            <div class="button-group">
+                <button class="primary" onclick="acknowledgeConsequence()">UNDERSTOOD</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEMPT TRIAL SCREEN -->
+    <div id="contempt-screen" class="screen">
+        <div class="box">
+            <div class="title">⚖️ CONTEMPT OF COURT TRIAL</div>
+            <div class="warning-box">
+                You are being tried for willfully refusing jury duty on three occasions. You have three defense strategies available. Choose one:
+            </div>
+
+            <div class="option-card" style="margin: 20px 0;">
+                <input type="radio" name="defense" value="guilty" id="def-guilty">
+                <label for="def-guilty" style="cursor: pointer;">
+                    <strong>Plead Guilty</strong> - Admit you were wrong<br>
+                    <span style="font-size: 13px; color: #666;">Penalty: $500 fine + 40 hours community service + 5 mandatory cases</span>
+                </label>
+            </div>
+
+            <div class="option-card" style="margin: 20px 0;">
+                <input type="radio" name="defense" value="defend" id="def-defend">
+                <label for="def-defend" style="cursor: pointer;">
+                    <strong>Defend Position</strong> - Argue hardship<br>
+                    <span style="font-size: 13px; color: #666;">Penalty: $750 fine + 10 mandatory cases (no refusal option)</span>
+                </label>
+            </div>
+
+            <div class="option-card" style="margin: 20px 0;">
+                <input type="radio" name="defense" value="smart" id="def-smart">
+                <label for="def-smart" style="cursor: pointer;">
+                    <strong>Challenge the System</strong> - Argue misconduct<br>
+                    <span style="font-size: 13px; color: #666;">Penalty: $1,200 fine + 60 hours service + 10 mandatory cases</span>
+                </label>
+            </div>
+
+            <div class="button-group">
+                <button class="primary" onclick="goToContemptTrial()">PROCEED TO TRIAL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEMPT VERDICT SCREEN -->
+    <div id="contempt-verdict-screen" class="screen">
+        <div class="box">
+            <div class="title">⚖️ JUDGE'S VERDICT</div>
+            <div id="contempt-verdict-content" style="margin: 30px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;"></div>
+            <div class="button-group">
+                <button class="primary" onclick="acknowledgeContemptVerdict()">ACCEPT VERDICT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== GAME STATE ====================
+const gameState = {
+    currentScreen: 'summons-screen',
+    declineCount: parseInt(sessionStorage.getItem('declineCount') || '0'),
+    totalCredits: parseInt(sessionStorage.getItem('totalCredits') || '0'),
+    casesCompleted: parseInt(sessionStorage.getItem('casesCompleted') || '0'),
+    callInDay: 1,
+    callsOnDay: 0,
+    hasBeenCalled: false,
+    currentCase: null,
+    playerVoiceVerdictAnswers: {},
+    playerVote: null,
+    playerJustification: null,
+    npcConvictions: [],
+    jury: [],
+    round: 1,
+    verdictReached: false,
+    juryVote: null,
+    playerFinalVerdictAnswer: null,
+};
+
+// ==================== CASE DATA ====================
+const casesData = [
+    // WHITE COLLAR - EMBEZZLEMENT
+    {
+        id: 1,
+        name: 'Tribunal v. Robert Chen',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4782',
+        defendant: 'Robert Chen',
+        crime: 'Embezzlement',
+        duration: '3-day trial',
+        descShort: 'Corporate CFO embezzles $2.3M over 3 years',
+        prosecutionSummary: 'Robert Chen, CFO of TechCorp Industries, systematically embezzled company funds through fake invoices and shell companies. Evidence includes falsified bank records, email chains showing knowledge, and witness testimony from accounting staff.',
+        defenseSummary: 'The defense argues the accounting practices at TechCorp were murky and unclear. The defendant claims these transfers were authorized reimbursements, not theft. Expert testimony questions whether intent can be proven.',
+        evidence: [
+            { name: 'Bank Records', description: 'Wire transfers to shell companies over 3-year period' },
+            { name: 'Email Chain', description: 'Emails showing defendant knew about scheme' },
+            { name: 'Witness Testimony', description: 'CFO\'s assistant confirms falsified invoices' },
+            { name: 'Financial Report', description: 'Audit shows $2.3M discrepancies' }
+        ],
+        realCaseBasis: 'Inspired by Enron-style embezzlement cases',
+        actualVerdict: 'In real similar cases, conviction rates are 85% for clear evidence',
+    },
+    // WHITE COLLAR - INSIDER TRADING
+    {
+        id: 2,
+        name: 'Tribunal v. David Martinez',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4783',
+        defendant: 'David Martinez',
+        crime: 'Insider Trading',
+        duration: '4-day trial',
+        descShort: 'Investment banker trades on confidential information',
+        prosecutionSummary: 'David Martinez, an investment banker, traded stock before public acquisition announcement. Prosecutors show phone records and trading patterns prove he used insider information for profit. Gained $2.1M in days.',
+        defenseSummary: 'The defense argues the trading was coincidental. The defendant claims he researched the company independently and made a lucky trade. Expert witnesses question if circumstantial evidence proves intent.',
+        evidence: [
+            { name: 'Phone Records', description: 'Calls between defendant and board member before announcement' },
+            { name: 'Trading Records', description: 'Unusual stock purchases days before public announcement' },
+            { name: 'Text Messages', description: 'Cryptic messages about "big deal coming"' },
+            { name: 'Expert Testimony', description: 'Statistical improbability of coincidence' }
+        ],
+        realCaseBasis: 'Similar to Martha Stewart insider trading case',
+        actualVerdict: 'Insider trading cases have 80% conviction rate when evidence is strong',
+    },
+    // WHITE COLLAR - TAX EVASION
+    {
+        id: 3,
+        name: 'Tribunal v. Patricia Kowalski',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4784',
+        defendant: 'Patricia Kowalski',
+        crime: 'Tax Evasion',
+        duration: '2-day trial',
+        descShort: 'Small business owner hides income in offshore accounts',
+        prosecutionSummary: 'Patricia Kowalski, owner of a dental practice, hid $500K in annual income in offshore Cayman Islands accounts. Prosecutors prove unreported income through bank records and financial forensics.',
+        defenseSummary: 'The defense claims the offshore accounts were for legitimate business investments. Defendant argues she misunderstood tax reporting requirements and intended to report the income.',
+        evidence: [
+            { name: 'Bank Records', description: 'Transfers to Cayman Islands accounts' },
+            { name: 'IRS Documents', description: 'Discrepancies between reported and actual income' },
+            { name: 'Financial Records', description: 'Business accounts show much higher income' },
+            { name: 'Expert Testimony', description: 'Accountant explains the unreported amounts' }
+        ],
+        realCaseBasis: 'Based on common tax evasion cases',
+        actualVerdict: '90% conviction rate for proven tax evasion with bank evidence',
+    },
+    // WHITE COLLAR - WIRE FRAUD
+    {
+        id: 4,
+        name: 'Tribunal v. James Rothschild',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4785',
+        defendant: 'James Rothschild',
+        crime: 'Wire Fraud',
+        duration: '3-day trial',
+        descShort: 'Investment scammer defrauds elderly investors of $1.5M',
+        prosecutionSummary: 'James Rothschild conducted a Ponzi scheme promising 15% returns to elderly investors. He funneled their money into personal accounts instead. Prosecutors show email schemes and bank transfers.',
+        defenseSummary: 'The defense argues there was a legitimate investment plan that failed. Defendant claims the poor returns were due to market conditions, not fraud. Expert testimony disputes the investment strategy.',
+        evidence: [
+            { name: 'Email Chain', description: 'Promises of unrealistic returns to investors' },
+            { name: 'Bank Records', description: 'Money flowing to personal accounts' },
+            { name: 'Witness Testimony', description: 'Elderly victims describe the promises made' },
+            { name: 'Financial Analysis', description: 'No legitimate investments found' }
+        ],
+        realCaseBasis: 'Similar to Bernie Madoff-style schemes',
+        actualVerdict: '95% conviction rate for wire fraud with victim testimony',
+    },
+    // WHITE COLLAR - PONZI SCHEME
+    {
+        id: 5,
+        name: 'Tribunal v. Richard Sullivan',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4786',
+        defendant: 'Richard Sullivan',
+        crime: 'Ponzi Scheme',
+        duration: '4-day trial',
+        descShort: 'Operator runs Ponzi scheme affecting 200+ investors',
+        prosecutionSummary: 'Richard Sullivan promised returns from a fake hedge fund, recruiting 200+ investors and collecting $8M. Early investors were paid with new investor money. When caught, $3M was unaccounted for.',
+        defenseSummary: 'The defense argues the fund had real operations initially but market downturns caused losses. Defendant claims he was trying to recover losses, not running a deliberate scheme.',
+        evidence: [
+            { name: 'Business Records', description: 'No real investments found despite claims' },
+            { name: 'Investor Statements', description: 'Documentation of promised vs. actual returns' },
+            { name: 'Bank Records', description: 'Circular money flows from new to old investors' },
+            { name: 'Expert Testimony', description: 'Mathematical proof of Ponzi structure' }
+        ],
+        realCaseBasis: 'Based on Madoff and Allen Stanford cases',
+        actualVerdict: '99% conviction rate for proven Ponzi schemes',
+    },
+    // WHITE COLLAR - ACCOUNTING FRAUD
+    {
+        id: 6,
+        name: 'Tribunal v. Angela Zhang',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4787',
+        defendant: 'Angela Zhang',
+        crime: 'Accounting Fraud',
+        duration: '3-day trial',
+        descShort: 'CFO falsifies financial statements to inflate company value',
+        prosecutionSummary: 'Angela Zhang, CFO of BuildTech Construction, inflated earnings by 40% in financial statements. False statements affected stock prices and investor confidence. Prosecutors show altered documents and emails.',
+        defenseSummary: 'The defense argues legitimate accounting differences exist. The defendant claims estimates were reasonable and standard in the industry.',
+        evidence: [
+            { name: 'Financial Statements', description: 'Comparison of reported vs. actual earnings' },
+            { name: 'Email Records', description: 'Instructions to inflate numbers' },
+            { name: 'Witness Testimony', description: 'Accounting staff confirm falsification' },
+            { name: 'Expert Testimony', description: 'GAAP violations proven' }
+        ],
+        realCaseBasis: 'Similar to Worldcom and Enron accounting scandals',
+        actualVerdict: '85% conviction rate for accounting fraud with documentary evidence',
+    },
+    // WHITE COLLAR - BRIBERY
+    {
+        id: 7,
+        name: 'Tribunal v. Thomas Brennan',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4788',
+        defendant: 'Thomas Brennan',
+        crime: 'Bribery',
+        duration: '4-day trial',
+        descShort: 'Government contractor bribes city official for contracts',
+        prosecutionSummary: 'Thomas Brennan, construction company owner, paid $500K in bribes to city official for favorable contracting decisions. Prosecutors show bank transfers, phone records, and testimony from the official.',
+        defenseSummary: 'The defense argues the payments were legitimate consulting fees. Expert witnesses testify the contracts were won on merit, not bribery.',
+        evidence: [
+            { name: 'Bank Records', description: 'Regular payments to official\'s account' },
+            { name: 'Phone Records', description: 'Communications between defendant and official' },
+            { name: 'Cooperating Witness', description: 'City official testifies about bribe agreement' },
+            { name: 'Contracts Analysis', description: 'Comparison with competitive bids' }
+        ],
+        realCaseBasis: 'Based on typical government corruption cases',
+        actualVerdict: '90% conviction rate when cooperating witness testifies',
+    },
+    // WHITE COLLAR - HEALTHCARE FRAUD
+    {
+        id: 8,
+        name: 'Tribunal v. Dr. Michael Stevens',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4789',
+        defendant: 'Dr. Michael Stevens',
+        crime: 'Healthcare Fraud',
+        duration: '3-day trial',
+        descShort: 'Doctor bills Medicare for unnecessary procedures',
+        prosecutionSummary: 'Dr. Stevens billed Medicare for $1.2M in unnecessary surgeries and tests. Prosecutors show medical records prove procedures were medically unjustified. Patients testify they were pressured into treatments.',
+        defenseSummary: 'The defense argues the procedures were medically necessary based on standard of care. Expert medical witnesses testify the treatments were reasonable.',
+        evidence: [
+            { name: 'Medicare Records', description: 'Billing history shows pattern of charges' },
+            { name: 'Patient Records', description: 'Medical justification missing for procedures' },
+            { name: 'Expert Medical Testimony', description: 'Procedures were not medically necessary' },
+            { name: 'Witness Testimony', description: 'Patients describe pressure to undergo treatment' }
+        ],
+        realCaseBasis: 'Based on healthcare fraud prosecutions',
+        actualVerdict: '80% conviction rate with patient testimony and medical experts',
+    },
+    // WHITE COLLAR - BANKRUPTCY FRAUD
+    {
+        id: 9,
+        name: 'Tribunal v. Christopher Lee',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4790',
+        defendant: 'Christopher Lee',
+        crime: 'Bankruptcy Fraud',
+        duration: '2-day trial',
+        descShort: 'Businessman hides assets before bankruptcy filing',
+        prosecutionSummary: 'Christopher Lee transferred $800K in assets to offshore accounts days before filing bankruptcy. Prosecutors show fraudulent intent through timing and concealment.',
+        defenseSummary: 'The defense argues the transfers were routine business management and the timing was coincidental.',
+        evidence: [
+            { name: 'Bank Records', description: 'Large transfers before bankruptcy filing' },
+            { name: 'Bankruptcy Documents', description: 'Asset lists omit offshore accounts' },
+            { name: 'Expert Testimony', description: 'Analysis of fraudulent concealment' },
+            { name: 'Timeline Evidence', description: 'Proximity of transfers to filing' }
+        ],
+        realCaseBasis: 'Based on bankruptcy fraud cases',
+        actualVerdict: '85% conviction rate with clear transfer evidence',
+    },
+    // WHITE COLLAR - MONEY LAUNDERING
+    {
+        id: 10,
+        name: 'Tribunal v. Dmitri Volkov',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4791',
+        defendant: 'Dmitri Volkov',
+        crime: 'Money Laundering',
+        duration: '4-day trial',
+        descShort: 'Currency exchange business used to launder criminal proceeds',
+        prosecutionSummary: 'Dmitri Volkov operated a currency exchange funneling $5M in drug proceeds through the system. Prosecutors show structuring patterns consistent with money laundering and lack of legitimate business.',
+        defenseSummary: 'The defense argues the business was legitimate currency exchange. Defendant claims customers simply preferred cash transactions.',
+        evidence: [
+            { name: 'Bank Records', description: 'Structured deposits below reporting thresholds' },
+            { name: 'Customer Analysis', description: 'No legitimate business explanation for transactions' },
+            { name: 'Source of Funds', description: 'No verifiable source for cash' },
+            { name: 'Expert Testimony', description: 'Pattern consistent with money laundering' }
+        ],
+        realCaseBasis: 'Based on money laundering prosecutions',
+        actualVerdict: '88% conviction rate for structured deposits and pattern analysis',
+    },
+    // WHITE COLLAR - SECURITIES FRAUD
+    {
+        id: 11,
+        name: 'Tribunal v. Jennifer Walsh',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4792',
+        defendant: 'Jennifer Walsh',
+        crime: 'Securities Fraud',
+        duration: '3-day trial',
+        descShort: 'Investment advisor misleads clients about fund performance',
+        prosecutionSummary: 'Jennifer Walsh misrepresented investment fund returns to clients, showing 12% annual gains when actual returns were negative. Prosecutors show falsified documents and client testimony.',
+        defenseSummary: 'The defense argues projections were reasonable estimates. Expert witnesses testify the methodology was sound despite poor results.',
+        evidence: [
+            { name: 'Fund Statements', description: 'False performance reports provided to clients' },
+            { name: 'Actual Records', description: 'Documentation of true returns' },
+            { name: 'Client Testimony', description: 'Investors describe being misled' },
+            { name: 'Expert Analysis', description: 'Methodology could not produce claimed results' }
+        ],
+        realCaseBasis: 'Based on investment fraud cases',
+        actualVerdict: '82% conviction rate with client testimony and documents',
+    },
+    // WHITE COLLAR - TRADE SECRETS THEFT
+    {
+        id: 12,
+        name: 'Tribunal v. Kevin Cho',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4793',
+        defendant: 'Kevin Cho',
+        crime: 'Trade Secrets Theft',
+        duration: '3-day trial',
+        descShort: 'Former employee steals proprietary software code',
+        prosecutionSummary: 'Kevin Cho downloaded 2GB of proprietary code days before joining a competitor. Prosecutors show file access logs, code comparison, and his use of the code at new company.',
+        defenseSummary: 'The defense argues the code was general knowledge. Defendant claims any similarities are coincidence.',
+        evidence: [
+            { name: 'Server Logs', description: 'File downloads on departure date' },
+            { name: 'Code Comparison', description: 'Side-by-side code analysis showing identical sections' },
+            { name: 'Timeline', description: 'Code used at new company weeks later' },
+            { name: 'Expert Testimony', description: 'Probability of coincidence is negligible' }
+        ],
+        realCaseBasis: 'Based on IP theft prosecutions',
+        actualVerdict: '90% conviction rate with code evidence and timing',
+    },
+    // WHITE COLLAR - GRANT FRAUD
+    {
+        id: 13,
+        name: 'Tribunal v. Dr. Linda Park',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4794',
+        defendant: 'Dr. Linda Park',
+        crime: 'Grant Fraud',
+        duration: '3-day trial',
+        descShort: 'Researcher falsifies grant application and results',
+        prosecutionSummary: 'Dr. Park falsified research credentials and data in a $2M NSF grant application. Prosecutors show fake publications, misrepresented experience, and data fabrication.',
+        defenseSummary: 'The defense argues the research was conducted as proposed. Minor credential discrepancies are claimed to be clerical errors.',
+        evidence: [
+            { name: 'Grant Application', description: 'Comparison with actual credentials' },
+            { name: 'Publication Records', description: 'Fake citations in application' },
+            { name: 'Data Analysis', description: 'Statistical impossibilities prove fabrication' },
+            { name: 'Expert Testimony', description: 'Research integrity violation confirmed' }
+        ],
+        realCaseBasis: 'Based on research fraud cases',
+        actualVerdict: '95% conviction rate for research fraud with data experts',
+    },
+    // WHITE COLLAR - CONTRACT FRAUD
+    {
+        id: 14,
+        name: 'Tribunal v. Marco Delgado',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4795',
+        defendant: 'Marco Delgado',
+        crime: 'Contract Fraud',
+        duration: '2-day trial',
+        descShort: 'Contractor fails to perform work but keeps $500K payment',
+        prosecutionSummary: 'Marco Delgado contracted to renovate federal courthouse, took payment, and performed minimal work before abandoning project. Prosecutors show contract, photos, and expert testimony on missing work.',
+        defenseSummary: 'The defense argues financial difficulties prevented completion, but work performed had value.',
+        evidence: [
+            { name: 'Contract', description: 'Scope of work specifications' },
+            { name: 'Photographs', description: 'Before/after comparison' },
+            { name: 'Expert Assessment', description: 'Less than 20% of work completed' },
+            { name: 'Payment Records', description: 'Full $500K paid before completion' }
+        ],
+        realCaseBasis: 'Based on contractor fraud cases',
+        actualVerdict: '88% conviction rate with documentation and expert assessment',
+    },
+    // WHITE COLLAR - CREDIT CARD FRAUD
+    {
+        id: 15,
+        name: 'Tribunal v. Ashley Rodriguez',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4796',
+        defendant: 'Ashley Rodriguez',
+        crime: 'Credit Card Fraud',
+        duration: '2-day trial',
+        descShort: 'Retail employee steals customer credit card information',
+        prosecutionSummary: 'Ashley Rodriguez, store employee, captured credit card numbers and created fraudulent charges totaling $180K. Prosecutors show surveillance video, transaction records, and card holder testimony.',
+        defenseSummary: 'The defense argues someone else had access to card data. Defendant claims the charges were unauthorized.',
+        evidence: [
+            { name: 'Surveillance Video', description: 'Defendant swiping cards multiple times' },
+            { name: 'Transaction Records', description: 'Charges from terminals defendant worked' },
+            { name: 'Cardholder Testimony', description: 'Victims never authorized charges' },
+            { name: 'Digital Evidence', description: 'Data shows pattern tied to defendant\'s shifts' }
+        ],
+        realCaseBasis: 'Based on card fraud prosecutions',
+        actualVerdict: '92% conviction rate with surveillance and card holder testimony',
+    },
+    // WHITE COLLAR - ENVIRONMENTAL FRAUD
+    {
+        id: 16,
+        name: 'Tribunal v. ToxiChem Industries',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4797',
+        defendant: 'ToxiChem Industries (CEO James Norton)',
+        crime: 'Environmental Fraud',
+        duration: '4-day trial',
+        descShort: 'Company falsifies environmental compliance reports',
+        prosecutionSummary: 'ToxiChem falsified EPA reports showing compliant emissions while actually dumping toxic waste. Prosecutors show forged reports, actual test results, and environmental damage.',
+        defenseSummary: 'The defense argues reports accurately reflected best efforts. Compliance challenges were beyond the company\'s control.',
+        evidence: [
+            { name: 'EPA Reports', description: 'Forged compliance documentation' },
+            { name: 'Actual Test Results', description: 'Toxin levels 50x permitted amounts' },
+            { name: 'Environmental Samples', description: 'Soil and water contamination confirmed' },
+            { name: 'Email Evidence', description: 'Instructions to falsify records' }
+        ],
+        realCaseBasis: 'Based on environmental fraud cases',
+        actualVerdict: '85% conviction rate with test results and evidence of falsification',
+    },
+    // WHITE COLLAR - LOAN FRAUD
+    {
+        id: 17,
+        name: 'Tribunal v. Victor Morales',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4798',
+        defendant: 'Victor Morales',
+        crime: 'Loan Fraud',
+        duration: '2-day trial',
+        descShort: 'Mortgage broker falsifies income documents for unqualified borrowers',
+        prosecutionSummary: 'Victor Morales created fake income documents for 30+ borrowers unqualified for mortgages. Banks lost $8M when borrowers defaulted. Prosecutors show forged documents and bank losses.',
+        defenseSummary: 'The defense argues borrowers requested documents and bears responsibility. Defendant claims he was merely facilitating transactions.',
+        evidence: [
+            { name: 'Forged Documents', description: 'Tax returns and income statements' },
+            { name: 'Actual Income Records', description: 'Comparison showing fabrication' },
+            { name: 'Bank Records', description: 'Defaulted loans tied to defendant\'s mortgages' },
+            { name: 'Borrower Testimony', description: 'Statements about requesting false documents' }
+        ],
+        realCaseBasis: 'Based on mortgage fraud cases',
+        actualVerdict: '90% conviction rate with document and default evidence',
+    },
+    // WHITE COLLAR - KICKBACK SCHEME
+    {
+        id: 18,
+        name: 'Tribunal v. Richard Campbell',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4799',
+        defendant: 'Richard Campbell',
+        crime: 'Kickback Scheme',
+        duration: '3-day trial',
+        descShort: 'Hospital administrator receives payments for steering business to vendors',
+        prosecutionSummary: 'Richard Campbell, hospital administrator, received $300K in hidden payments from medical suppliers in exchange for steering hospital purchases to them. Prosecutors show bank transfers and supplier testimony.',
+        defenseSummary: 'The defense argues the payments were legitimate consulting fees for advice provided.',
+        evidence: [
+            { name: 'Bank Records', description: 'Regular payments from multiple suppliers' },
+            { name: 'Supplier Testimony', description: 'Corroborate kickback arrangement' },
+            { name: 'Hospital Records', description: 'Purchases increase after payments begin' },
+            { name: 'Email Evidence', description: 'References to "special arrangements"' }
+        ],
+        realCaseBasis: 'Based on healthcare kickback prosecutions',
+        actualVerdict: '88% conviction rate with supplier testimony and payment records',
+    },
+    // WHITE COLLAR - INSURANCE FRAUD
+    {
+        id: 19,
+        name: 'Tribunal v. Patricia Nguyen',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4800',
+        defendant: 'Patricia Nguyen',
+        crime: 'Insurance Fraud',
+        duration: '2-day trial',
+        descShort: 'Business owner stages arson to collect insurance',
+        prosecutionSummary: 'Patricia Nguyen, restaurant owner, staged a fire to collect $500K insurance claim while facing bankruptcy. Prosecutors show arson evidence, financial motive, and insurance company investigation.',
+        defenseSummary: 'The defense argues the fire was accidental. Electrical problems may have caused the blaze.',
+        evidence: [
+            { name: 'Fire Investigation', description: 'Evidence of accelerant and deliberate placement' },
+            { name: 'Financial Records', description: 'Business failing, bankruptcy pending' },
+            { name: 'Witness Testimony', description: 'Suspicious behavior before fire' },
+            { name: 'Insurance Expert', description: 'Claim suspicious given financial situation' }
+        ],
+        realCaseBasis: 'Based on insurance fraud prosecutions',
+        actualVerdict: '82% conviction rate with arson evidence and motive',
+    },
+    // WHITE COLLAR - MORTGAGE FRAUD
+    {
+        id: 20,
+        name: 'Tribunal v. Gerald Finch',
+        type: 'WHITE COLLAR',
+        caseNumber: 'CASE #2024-FED-4801',
+        defendant: 'Gerald Finch',
+        crime: 'Mortgage Fraud',
+        duration: '2-day trial',
+        descShort: 'Homebuyer lies about income and assets for $800K mortgage',
+        prosecutionSummary: 'Gerald Finch falsified financial statements to qualify for an $800K mortgage he couldn\'t afford. Prosecutors show forged documents, actual income records, and subsequent default.',
+        defenseSummary: 'The defense argues the documents reflected financial situation at application time.',
+        evidence: [
+            { name: 'Application Documents', description: 'Stated income $200K, actual income $50K' },
+            { name: 'Bank Records', description: 'No deposits matching claimed income' },
+            { name: 'Tax Returns', description: 'Actual income far below claim' },
+            { name: 'Default Notice', description: 'Missed payments within 6 months' }
+        ],
+        realCaseBasis: 'Based on mortgage fraud cases',
+        actualVerdict: '92% conviction rate with document and income comparison',
+    },
+    // SERIOUS CRIME - MURDER
+    {
+        id: 21,
+        name: 'Tribunal v. Marcus Thompson',
+        type: 'SERIOUS CRIME',
+        caseNumber: 'CASE #2024-FED-4802',
+        defendant: 'Marcus Thompson',
+        crime: 'Murder',
+        duration: '5-day trial',
+        descShort: 'Defendant allegedly killed rival in street altercation',
+        prosecutionSummary: 'Marcus Thompson is accused of shooting rival gang member Antonio Rodriguez. Prosecutors show witness testimony, ballistics evidence, and motive. Defendant had prior altercations with victim.',
+        defenseSummary: 'The defense argues self-defense. Defendant claims Rodriguez drew first and he acted to protect himself.',
+        evidence: [
+            { name: 'Witness Testimony', description: 'Three witnesses identify defendant' },
+            { name: 'Ballistics Evidence', description: 'Gun matches bullets found in victim' },
+            { name: 'Forensics', description: 'Gunpowder residue on defendant\'s hands' },
+            { name: 'Prior Altercations', description: 'History of conflict with victim' }
+        ],
+        realCaseBasis: 'Fictional street crime case',
+        actualVerdict: 'Murder cases have highly variable outcomes depending on witness credibility',
+    },
+    // SOCIAL/SCANDAL - POLITICAL CORRUPTION
+    {
+        id: 22,
+        name: 'Tribunal v. Senator Robert Walsh',
+        type: 'SCANDAL',
+        caseNumber: 'CASE #2024-FED-4803',
+        defendant: 'Senator Robert Walsh',
+        crime: 'Political Corruption',
+        duration: '4-day trial',
+        descShort: 'U.S. Senator receives bribes for legislative favors',
+        prosecutionSummary: 'Senator Walsh accepted $2M in campaign contributions from developers in exchange for legislative support. Prosecutors show donor records, correspondence, and quid pro quo documentation.',
+        defenseSummary: 'The defense argues campaign contributions are legal. Legislative actions were based on policy merits, not donations.',
+        evidence: [
+            { name: 'Donor Records', description: 'Contributions from specific developers' },
+            { name: 'Legislative Records', description: 'Timeline of bills introduced after donations' },
+            { name: 'Correspondence', description: 'Emails showing quid pro quo language' },
+            { name: 'Developer Testimony', description: 'Expected legislative support for donations' }
+        ],
+        realCaseBasis: 'Based on political corruption cases',
+        actualVerdict: 'Political corruption cases are highly politicized; conviction rates vary 50-85%',
+    }
+];
+
+// ==================== JUROR TEMPLATES ====================
+function generateJurors(caseType) {
+    const baseJurors = [
+        { name: 'Sarah Chen', role: 'Accountant', personality: 'Analytical', baseConviction: 75 },
+        { name: 'Marcus Johnson', role: 'Teacher', personality: 'Logical', baseConviction: 68 },
+        { name: 'Patricia Brown', role: 'Retired', personality: 'Traditional', baseConviction: 72 },
+        { name: 'David Martinez', role: 'Construction Worker', personality: 'Skeptical', baseConviction: 55 },
+        { name: 'Jennifer Lee', role: 'Nurse', personality: 'Empathetic', baseConviction: 65 },
+        { name: 'Robert Kim', role: 'Software Engineer', personality: 'Analytical', baseConviction: 70 },
+        { name: 'Michael (Player)', role: 'You', personality: 'Neutral', baseConviction: null },
+        { name: 'Linda Garcia', role: 'Social Worker', personality: 'Empathetic', baseConviction: 60 },
+        { name: 'James Wilson', role: 'Business Owner', personality: 'Skeptical', baseConviction: 50 },
+        { name: 'Susan Taylor', role: 'Librarian', personality: 'Logical', baseConviction: 67 },
+        { name: 'Thomas Anderson', role: 'Mechanic', personality: 'Practical', baseConviction: 62 },
+        { name: 'Maria Lopez', role: 'Artist', personality: 'Intuitive', baseConviction: 58 }
+    ];
+
+    // Adjust convictions based on case type
+    let convictions = baseJurors.map((j, idx) => {
+        let conviction = j.baseConviction;
+        if (!conviction) return null; // Skip player
+
+        if (caseType === 'WHITE COLLAR') {
+            if (j.role === 'Accountant' || j.role === 'Software Engineer') conviction += 8;
+            if (j.role === 'Business Owner') conviction -= 10;
+        } else if (caseType === 'SERIOUS CRIME') {
+            if (j.role === 'Retired' || j.role === 'Social Worker') conviction += 5;
+            if (j.role === 'Business Owner') conviction -= 5;
+        } else if (caseType === 'SCANDAL') {
+            if (j.role === 'Retired') conviction += 10;
+            if (j.role === 'Business Owner') conviction -= 8;
+        }
+
+        conviction = Math.min(95, Math.max(25, conviction + Math.random() * 10 - 5));
+        return conviction;
+    });
+
+    return baseJurors.map((j, idx) => ({
+        id: idx + 1,
+        name: j.name,
+        role: j.role,
+        personality: j.personality,
+        conviction: convictions[idx],
+        startingConviction: convictions[idx],
+        allies: getRandomAllies(idx),
+        flexibleity: Math.random(),
+        vote: null,
+        roundHistory: [],
+        arguments: {
+            guilty: getArgumentsForPersonality(j.personality, 'guilty', caseType),
+            notGuilty: getArgumentsForPersonality(j.personality, 'notGuilty', caseType)
+        }
+    }));
+}
+
+function getRandomAllies(id) {
+    const allies = [];
+    for (let i = 0; i < 2; i++) {
+        let ally = Math.floor(Math.random() * 12);
+        if (ally !== id && !allies.includes(ally)) {
+            allies.push(ally);
+        }
+    }
+    return allies;
+}
+
+function getArgumentsForPersonality(personality, vote, caseType) {
+    const guiltyArgs = {
+        Analytical: [
+            "The evidence clearly shows guilt beyond reasonable doubt.",
+            "The numbers don't lie. Follow the trail.",
+            "The logical conclusion is guilt."
+        ],
+        Logical: [
+            "The facts support guilt.",
+            "This conclusion is inescapable.",
+            "The evidence builds an overwhelming case."
+        ],
+        Empathetic: [
+            "Think about the victim and what they've endured.",
+            "I'm convinced of guilt because of the victim's testimony.",
+            "The human suffering here demands accountability."
+        ],
+        Traditional: [
+            "In my experience, guilt is clear.",
+            "This case reminds me of similar situations I've seen.",
+            "My instinct and the evidence say guilty."
+        ],
+        Skeptical: [
+            "I'm not fully convinced, but the evidence leans guilty.",
+            "There's more evidence pointing to guilt than innocence.",
+            "Despite my skepticism, the case is convincing."
+        ],
+        Practical: [
+            "The practical reading of evidence shows guilt.",
+            "Common sense says guilty.",
+            "The simplest explanation is guilt."
+        ],
+        Intuitive: [
+            "I just have a strong feeling about guilt here.",
+            "Something about this case tells me guilty.",
+            "My instinct leans toward guilt."
+        ]
+    };
+
+    const notGuiltyArgs = {
+        Analytical: [
+            "Too many inconsistencies in the evidence.",
+            "The numbers don't add up.",
+            "Reasonable doubt exists."
+        ],
+        Logical: [
+            "The logic breaks down under scrutiny.",
+            "I cannot accept this flawed argument.",
+            "The reasoning has too many gaps."
+        ],
+        Empathetic: [
+            "I'm concerned about the defendant's side.",
+            "The defendant deserves the benefit of doubt.",
+            "We haven't heard enough to convict."
+        ],
+        Traditional: [
+            "My experience tells me to be cautious here.",
+            "Similar cases I've seen went the other way.",
+            "Something feels off about this case."
+        ],
+        Skeptical: [
+            "I'm skeptical of the prosecution's case.",
+            "The evidence isn't strong enough.",
+            "I cannot vote guilty with this doubt."
+        ],
+        Practical: [
+            "Practically speaking, this isn't proven.",
+            "Common sense says not guilty.",
+            "We don't have enough here."
+        ],
+        Intuitive: [
+            "I have a strong feeling about innocence.",
+            "Something tells me the defendant is innocent.",
+            "My gut says not guilty."
+        ]
+    };
+
+    return vote === 'guilty' ? (guiltyArgs[personality] || guiltyArgs.Logical) : (notGuiltyArgs[personality] || notGuiltyArgs.Logical);
+}
+
+// ==================== VOIR DIRE QUESTIONS ====================
+const voirDireQuestions = {
+    'WHITE COLLAR': [
+        {
+            q: 'Have you or anyone close to you worked in finance or accounting?',
+            context: 'This may bias your evaluation of financial evidence.',
+            options: ['Yes, extensively', 'Yes, some experience', 'No financial background', 'Prefer not to answer']
+        },
+        {
+            q: 'Do you believe circumstantial financial evidence is as compelling as direct evidence?',
+            context: 'White collar cases often rely on financial patterns.',
+            options: ['Yes, equally compelling', 'Somewhat compelling', 'Less compelling', 'Not compelling']
+        },
+        {
+            q: 'How do you feel about wealthy defendants?',
+            context: 'Does their status affect your judgment?',
+            options: ['I judge them fairly', 'I\'m skeptical of wealthy people', 'I sympathize with them', 'Status shouldn\'t matter']
+        },
+        {
+            q: 'Have you been a victim of fraud or financial crime?',
+            context: 'This experience may bias your judgment.',
+            options: ['Yes, personally', 'Yes, family member', 'No direct experience', 'Prefer not to answer']
+        }
+    ],
+    'SERIOUS CRIME': [
+        {
+            q: 'Have you or a family member been a victim of violence?',
+            context: 'This may affect your judgment in murder cases.',
+            options: ['Yes, personally', 'Yes, family member', 'No direct experience', 'Prefer not to answer']
+        },
+        {
+            q: 'What\'s your opinion on self-defense? When is it justified?',
+            context: 'This case involves potential self-defense claims.',
+            options: ['Very narrow circumstances', 'Reasonable circumstances', 'Broad circumstances', 'No clear position']
+        },
+        {
+            q: 'Do you trust forensic evidence and DNA testing?',
+            context: 'This case relies on forensic analysis.',
+            options: ['I trust it strongly', 'I generally trust it', 'I\'m skeptical', 'I don\'t trust it']
+        },
+        {
+            q: 'How do you feel about defendants who claim innocence?',
+            context: 'This defendant maintains innocence.',
+            options: ['Naturally skeptical', 'I listen with open mind', 'I believe the claim', 'No clear position']
+        }
+    ],
+    'SCANDAL': [
+        {
+            q: 'Do you believe politicians are inherently corrupt?',
+            context: 'This case involves a political figure.',
+            options: ['Yes, most are', 'Many are', 'Some are', 'No, most are ethical']
+        },
+        {
+            q: 'Can you judge a defendant fairly regardless of their political beliefs?',
+            context: 'This case has political dimensions.',
+            options: ['Yes, completely fair', 'Yes, mostly fair', 'I\'ll try', 'This is difficult for me']
+        },
+        {
+            q: 'Have you been affected by corruption or misconduct?',
+            context: 'This may bias your judgment.',
+            options: ['Yes, personally', 'Yes, indirectly', 'No direct experience', 'Prefer not to answer']
+        },
+        {
+            q: 'Do you believe the wealthy/connected get special treatment?',
+            context: 'Does this affect your judgment of this powerful defendant?',
+            options: ['Yes, definitely', 'Probably', 'Maybe', 'I don\'t think so']
+        }
+    ]
+};
+
+// ==================== UI FUNCTIONS ====================
+function showScreen(screenId) {
+    console.log('showScreen called with:', screenId);
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+        console.log('Screen ' + screenId + ' is now active');
+    } else {
+        console.error('Screen not found:', screenId);
+    }
+    gameState.currentScreen = screenId;
+}
+
+function acceptSummons() {
+    console.log('acceptSummons called');
+    gameState.callInDay = 1;
+    gameState.callsOnDay = 0;
+    console.log('About to render call-in week');
+    renderCallInWeek();
+    console.log('About to show callin-screen');
+    showScreen('callin-screen');
+    console.log('Screen should now be visible');
+}
+
+// ==================== CALL-IN WEEK ====================
+function renderCallInWeek() {
+    const calendar = document.getElementById('calendar-grid');
+    calendar.innerHTML = '';
+
+    for (let day = 1; day <= 7; day++) {
+        const dayBox = document.createElement('div');
+        dayBox.className = 'day-box';
+        if (day < gameState.callInDay) dayBox.classList.add('completed');
+        if (day === gameState.callInDay) dayBox.classList.add('current');
+        dayBox.innerHTML = `<div><strong>Day ${day}</strong></div><div style="font-size: 11px; color: #666;">Status</div>`;
+        calendar.appendChild(dayBox);
+    }
+
+    document.getElementById('callin-day').textContent = `${gameState.callInDay} of 7`;
+    document.getElementById('calls-made').textContent = gameState.callInDay - 1;
+}
+
+function callHotline() {
+    gameState.callsOnDay++;
+
+    let called = false;
+    if (gameState.callInDay === 7) {
+        called = true; // Guaranteed on day 7
+    } else if (gameState.callInDay >= 3 && gameState.callInDay <= 6) {
+        called = Math.random() < 0.5; // 50% chance days 3-6
+    }
+
+    if (called) {
+        document.getElementById('callin-result').innerHTML = '<div style="color: #27ae60; font-size: 18px;">✓ REPORT TO COURTHOUSE TOMORROW AT 8:30 AM</div>';
+        gameState.hasBeenCalled = true;
+        document.getElementById('callin-status').textContent = 'CALLED';
+        setTimeout(() => proceedAfterCallIn(), 2000);
+    } else {
+        document.getElementById('callin-result').innerHTML = '<div style="color: #666;">Check again tomorrow at 8:00 AM</div>';
+        gameState.callInDay++;
+        if (gameState.callInDay > 7) {
+            // All 7 days called, last day guarantees call
+            proceedAfterCallIn();
+        } else {
+            setTimeout(() => renderCallInWeek(), 1000);
+        }
+    }
+}
+
+function declineJuryDuty() {
+    gameState.declineCount++;
+    sessionStorage.setItem('declineCount', gameState.declineCount);
+
+    if (gameState.declineCount === 3) {
+        // Trigger contempt trial
+        showScreen('contempt-screen');
+    } else {
+        // Show consequence
+        const content = document.getElementById('decline-content');
+        if (gameState.declineCount === 1) {
+            document.getElementById('decline-title').textContent = '⚠️ CONSEQUENCE: ALTERNATE JURY DUTY';
+            content.innerHTML = `
+                <div class="warning-box">
+                    <strong>You have declined jury duty.</strong> As your first offense, you are assigned to serve as an ALTERNATE juror on the next case.
+                </div>
+                <p class="text">• Alternate jurors observe but cannot vote unless a seated juror is removed</p>
+                <p class="text">• You will attend all trial proceedings</p>
+                <p class="text">• If called to serve, you will receive voting rights</p>
+                <p class="text">• Failure to appear = Second offense</p>
+                <p style="margin-top: 20px; color: #e74c3c;"><strong>Decline Count: 1/3</strong></p>
+                <p style="color: #666;">Two more declines will result in contempt trial.</p>
+            `;
+        } else {
+            document.getElementById('decline-title').textContent = '⚠️ SERIOUS CONSEQUENCE: MANDATORY DIFFICULT CASES';
+            content.innerHTML = `
+                <div class="warning-box">
+                    <strong>You have declined jury duty twice.</strong> The court assigns you to two MANDATORY consecutive cases.
+                </div>
+                <p class="text">• Next two cases will be complex/serious crimes (no easy cases)</p>
+                <p class="text">• You cannot refuse these assignments</p>
+                <p class="text">• You must serve as a regular juror (full voting rights, increased responsibility)</p>
+                <p class="text">• One more decline triggers contempt of court proceedings</p>
+                <p style="margin-top: 20px; color: #e74c3c;"><strong>Decline Count: 2/3</strong></p>
+                <p style="color: #e74c3c;"><strong>⚠️ ONE MORE DECLINE RESULTS IN CONTEMPT TRIAL</strong></p>
+            `;
+        }
+        showScreen('decline-screen');
+    }
+}
+
+function acknowledgeConsequence() {
+    gameState.callInDay = 1;
+    renderCallInWeek();
+    showScreen('callin-screen');
+}
+
+function proceedAfterCallIn() {
+    assignRandomCase();
+}
+
+// ==================== CASE ASSIGNMENT ====================
+function assignRandomCase() {
+    const caseIdx = Math.floor(Math.random() * casesData.length);
+    gameState.currentCase = casesData[caseIdx];
+    gameState.npcConvictions = generateJurors(gameState.currentCase.type);
+
+    renderCaseAssignment();
+    showScreen('case-assignment-screen');
+}
+
+function renderCaseAssignment() {
+    const c = gameState.currentCase;
+    document.getElementById('case-number').textContent = c.caseNumber;
+    document.getElementById('case-type').textContent = c.type + ' CRIME';
+    document.getElementById('case-name').textContent = c.name;
+    document.getElementById('case-desc').textContent = c.descShort;
+    document.getElementById('case-duration').textContent = '📅 ' + c.duration;
+}
+
+function proceedToVoirDire() {
+    gameState.voirDireIndex = 0;
+    showVoirDireQuestion();
+    showScreen('voir-dire-screen');
+}
+
+// ==================== VOIR DIRE ====================
+function showVoirDireQuestion() {
+    const questions = voirDireQuestions[gameState.currentCase.type];
+    const idx = gameState.voirDireIndex;
+    const q = questions[idx];
+
+    document.getElementById('voir-dire-progress').textContent = `${idx + 1} of ${questions.length}`;
+    document.getElementById('voir-dire-question').textContent = q.q;
+    document.getElementById('voir-dire-context').textContent = q.context;
+
+    const optionsDiv = document.getElementById('voir-dire-options');
+    optionsDiv.innerHTML = '';
+
+    q.options.forEach((opt, i) => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.innerHTML = `
+            <input type="radio" name="voir-dire" value="${i}" id="vd-${i}">
+            <label for="vd-${i}" style="cursor: pointer; display: block;">${opt}</label>
+        `;
+        card.onclick = () => {
+            document.querySelectorAll('[name="voir-dire"]').forEach(r => r.checked = false);
+            document.getElementById(`vd-${i}`).checked = true;
+            card.classList.add('selected');
+        };
+        optionsDiv.appendChild(card);
+    });
+}
+
+function submitVoirDireAnswer() {
+    const selected = document.querySelector('[name="voir-dire"]:checked');
+    if (!selected) return;
+
+    gameState.playerVoiceVerdictAnswers[gameState.voirDireIndex] = selected.value;
+    gameState.voirDireIndex++;
+
+    if (gameState.voirDireIndex >= voirDireQuestions[gameState.currentCase.type].length) {
+        proceedToTrial();
+    } else {
+        showVoirDireQuestion();
+    }
+}
+
+// ==================== TRIAL ====================
+function proceedToTrial() {
+    renderTrial();
+    showScreen('trial-screen');
+}
+
+function renderTrial() {
+    const c = gameState.currentCase;
+    document.getElementById('trial-title').textContent = `⚖️ TRIAL - ${c.name}`;
+    document.getElementById('defendant-name').textContent = c.defendant;
+    document.getElementById('charge').textContent = c.crime;
+
+    document.getElementById('prosecution-case').innerHTML = `<div class="text">${c.prosecutionSummary}</div>`;
+    document.getElementById('defense-case').innerHTML = `<div class="text">${c.defenseSummary}</div>`;
+
+    let evidenceHtml = '';
+    c.evidence.forEach(e => {
+        evidenceHtml += `<span class="evidence-bubble" onclick="noteEvidence(this)" title="${e.description}">${e.name}</span>`;
+    });
+    document.getElementById('evidence-list').innerHTML = evidenceHtml;
+}
+
+function noteEvidence(el) {
+    el.classList.toggle('noted');
+}
+
+function proceedToDeliberation() {
+    gameState.round = 1;
+    gameState.verdictReached = false;
+    startDeliberation();
+}
+
+// ==================== DELIBERATION ====================
+function startDeliberation() {
+    renderDeliberationRound();
+    showScreen('deliberation-screen');
+}
+
+function renderDeliberationRound() {
+    const round = gameState.round;
+    document.getElementById('current-round').textContent = `${round} of 4`;
+
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+
+    if (round === 1) {
+        renderRound1();
+    } else if (round === 2) {
+        renderRound2();
+    } else if (round === 3) {
+        renderRound3();
+    } else {
+        renderRound4();
+    }
+}
+
+function renderRound1() {
+    const discussionDiv = document.getElementById('npc-discussion');
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">INITIAL VOTING</div><div class="text">Lead Juror Turner: "Let\'s begin. Juror 1, what\'s your verdict?"</div></div>';
+
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+    jury.forEach((npc, idx) => {
+        if (idx < 6) {
+            const vote = npc.conviction > 50 ? 'GUILTY' : 'NOT GUILTY';
+            npc.vote = vote;
+            const arg = npc.conviction > 50 ? npc.arguments.guilty[0] : npc.arguments.notGuilty[0];
+            discussionDiv.innerHTML += `
+                <div class="npc-statement">
+                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
+                    <div class="npc-statement-text">"${arg}"</div>
+                </div>
+            `;
+        }
+    });
+
+    document.getElementById('player-voting-section').style.display = 'block';
+    document.getElementById('discussion-phase').style.display = 'none';
+    renderVerdictButtons();
+}
+
+function renderVerdictButtons() {
+    const div = document.getElementById('verdict-buttons');
+    div.innerHTML = `
+        <button class="guilt" onclick="selectPlayerVote('GUILTY')">GUILTY</button>
+        <button class="innocence" onclick="selectPlayerVote('NOT GUILTY')">NOT GUILTY</button>
+    `;
+}
+
+function selectPlayerVote(verdict) {
+    gameState.playerVote = verdict;
+    document.getElementById('justification-section').style.display = 'block';
+    renderJustificationOptions(verdict);
+}
+
+function renderJustificationOptions(verdict) {
+    const justDiv = document.getElementById('justification-options');
+    justDiv.innerHTML = '';
+
+    const jury = gameState.npcConvictions.find(j => j.id === 7);
+    const args = verdict === 'GUILTY' ? jury.arguments.guilty : jury.arguments.notGuilty;
+
+    args.forEach((arg, i) => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.innerHTML = `
+            <input type="radio" name="justification" value="${i}" id="just-${i}">
+            <label for="just-${i}" style="cursor: pointer; display: block;">${arg}</label>
+        `;
+        card.onclick = () => {
+            document.querySelectorAll('[name="justification"]').forEach(r => r.checked = false);
+            document.getElementById(`just-${i}`).checked = true;
+            gameState.playerJustification = arg;
+            document.getElementById('submit-vote-btn').style.display = 'block';
+        };
+        justDiv.appendChild(card);
+    });
+}
+
+function submitPlayerVote() {
+    const jury = gameState.npcConvictions.find(j => j.id === 7);
+    jury.vote = gameState.playerVote;
+    jury.conviction = gameState.playerVote === 'GUILTY' ? Math.min(95, jury.conviction + 5) : Math.max(25, jury.conviction - 5);
+
+    gameState.round++;
+
+    if (gameState.round <= 4) {
+        setTimeout(() => renderDeliberationRound(), 1500);
+    } else {
+        calculateFinalVerdict();
+    }
+}
+
+function renderRound2() {
+    const discussionDiv = document.getElementById('npc-discussion');
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">ROUND 2 - DISCUSSION</div><div class="text">Lead Juror Turner: "Let\'s discuss. Those voting NOT GUILTY, please explain."</div></div>';
+
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+    jury.forEach(npc => {
+        if (npc.conviction < 40) {
+            npc.vote = 'NOT GUILTY';
+            const arg = npc.arguments.notGuilty[Math.floor(Math.random() * npc.arguments.notGuilty.length)];
+            discussionDiv.innerHTML += `
+                <div class="npc-statement">
+                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
+                    <div class="npc-statement-text">"${arg}"</div>
+                </div>
+            `;
+        } else {
+            npc.vote = 'GUILTY';
+        }
+    });
+
+    updateTally();
+
+    document.getElementById('player-voting-section').style.display = 'none';
+    document.getElementById('discussion-phase').style.display = 'block';
+}
+
+function renderRound3() {
+    const discussionDiv = document.getElementById('npc-discussion');
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">ROUND 3 - PRESSURE</div><div class="text">Lead Juror Turner: "We\'re getting close. Let\'s focus on the key evidence."</div></div>';
+
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+    const undecided = jury.filter(j => !j.vote || j.conviction > 40 && j.conviction < 60);
+
+    jury.forEach(npc => {
+        // Simulate conviction shifts from discussion
+        if (npc.conviction > 50) {
+            npc.conviction += (Math.random() * 10 - 3);
+            npc.vote = 'GUILTY';
+        } else {
+            npc.conviction -= (Math.random() * 10 - 3);
+            npc.vote = 'NOT GUILTY';
+        }
+    });
+
+    jury.forEach((npc, idx) => {
+        if (idx < 5) {
+            const arg = npc.vote === 'GUILTY' ? npc.arguments.guilty[idx % npc.arguments.guilty.length] : npc.arguments.notGuilty[idx % npc.arguments.notGuilty.length];
+            discussionDiv.innerHTML += `
+                <div class="npc-statement">
+                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
+                    <div class="npc-statement-text">"${arg}"</div>
+                </div>
+            `;
+        }
+    });
+
+    updateTally();
+
+    document.getElementById('player-voting-section').style.display = 'none';
+    document.getElementById('discussion-phase').style.display = 'block';
+}
+
+function renderRound4() {
+    const discussionDiv = document.getElementById('npc-discussion');
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">ROUND 4 - FINAL VOTE</div><div class="text">⚠️ Bathroom break complete. Lead Juror Turner: "We need unanimity. Final round."</div></div>';
+
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+
+    // Final conviction shifts - most jurors move toward majority
+    const guiltyCount = jury.filter(j => j.vote === 'GUILTY').length + (gameState.playerVote === 'GUILTY' ? 1 : 0);
+    const majority = guiltyCount > (jury.length + 1) / 2;
+
+    jury.forEach(npc => {
+        if (majority && npc.conviction < 50) {
+            npc.conviction = Math.min(70, npc.conviction + 15);
+            npc.vote = 'GUILTY';
+        } else if (!majority && npc.conviction > 50) {
+            npc.conviction = Math.max(30, npc.conviction - 15);
+            npc.vote = 'NOT GUILTY';
+        }
+    });
+
+    jury.forEach((npc, idx) => {
+        if (idx < 4) {
+            const arg = npc.vote === 'GUILTY' ? npc.arguments.guilty[Math.floor(Math.random() * npc.arguments.guilty.length)] : npc.arguments.notGuilty[Math.floor(Math.random() * npc.arguments.notGuilty.length)];
+            discussionDiv.innerHTML += `
+                <div class="npc-statement">
+                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
+                    <div class="npc-statement-text">"${arg}"</div>
+                </div>
+            `;
+        }
+    });
+
+    updateTally();
+    document.getElementById('player-voting-section').style.display = 'none';
+    document.getElementById('discussion-phase').style.display = 'none';
+
+    setTimeout(() => {
+        calculateFinalVerdict();
+    }, 2000);
+}
+
+function updateTally() {
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+    const guiltyCount = jury.filter(j => j.vote === 'GUILTY').length + (gameState.playerVote === 'GUILTY' ? 1 : 0);
+    const notGuiltyCount = jury.filter(j => j.vote === 'NOT GUILTY').length + (gameState.playerVote === 'NOT GUILTY' ? 1 : 0);
+    const undecidedCount = jury.filter(j => !j.vote).length;
+
+    document.getElementById('vote-tally').innerHTML = `
+        Lead Juror announces: <strong>${guiltyCount} GUILTY, ${notGuiltyCount} NOT GUILTY${undecidedCount > 0 ? ', ' + undecidedCount + ' UNDECIDED' : ''}</strong>
+    `;
+}
+
+function continueDiscussion() {
+    gameState.round++;
+    if (gameState.round <= 4) {
+        renderDeliberationRound();
+    } else {
+        calculateFinalVerdict();
+    }
+}
+
+function calculateFinalVerdict() {
+    const jury = gameState.npcConvictions;
+    const guiltyVotes = jury.filter(j => j.vote === 'GUILTY').length;
+    const totalJurors = jury.length;
+
+    if (guiltyVotes > totalJurors / 2) {
+        gameState.juryVote = 'GUILTY';
+    } else {
+        gameState.juryVote = 'NOT GUILTY';
+    }
+
+    renderVerdictScreen();
+}
+
+function renderVerdictScreen() {
+    const verdict = gameState.juryVote;
+    document.getElementById('final-verdict').textContent = verdict;
+    document.getElementById('verdict-by').textContent = 'Jury Verdict (Unanimous)';
+    showScreen('verdict-screen');
+}
+
+function proceedToResults() {
+    gameState.playerFinalVerdictAnswer = gameState.playerVote;
+    renderResults();
+    showScreen('results-screen');
+}
+
+// ==================== RESULTS ====================
+function renderResults() {
+    const match = gameState.playerFinalVerdictAnswer === gameState.juryVote;
+    const caseCredits = gameState.currentCase.duration.includes('5-day') ? 50 : gameState.currentCase.duration.includes('4-day') ? 40 : gameState.currentCase.duration.includes('3-day') ? 30 : 20;
+
+    gameState.totalCredits += caseCredits;
+    gameState.casesCompleted++;
+    sessionStorage.setItem('totalCredits', gameState.totalCredits);
+    sessionStorage.setItem('casesCompleted', gameState.casesCompleted);
+
+    document.getElementById('player-verdict-result').textContent = gameState.playerFinalVerdictAnswer;
+    document.getElementById('jury-verdict-result').textContent = gameState.juryVote;
+
+    const matchDiv = document.getElementById('match-result');
+    if (match) {
+        matchDiv.classList.add('agreed');
+        matchDiv.classList.remove('disagreed');
+        matchDiv.textContent = '✓ VERDICT MATCH';
+    } else {
+        matchDiv.classList.add('disagreed');
+        matchDiv.classList.remove('agreed');
+        matchDiv.textContent = '✗ VERDICT DISAGREED';
+    }
+
+    const caseInfo = `
+        <strong>Real Case Reference:</strong> ${gameState.currentCase.realCaseBasis}<br>
+        <strong>Actual Outcome:</strong> ${gameState.currentCase.actualVerdict}
+    `;
+    document.getElementById('real-case-info').innerHTML = caseInfo;
+
+    document.getElementById('credits-earned').textContent = caseCredits;
+    document.getElementById('total-credits').textContent = gameState.totalCredits;
+    document.getElementById('cases-completed').textContent = gameState.casesCompleted;
+}
+
+function nextCase() {
+    assignRandomCase();
+    showScreen('case-assignment-screen');
+}
+
+function returnToMenu() {
+    location.reload();
+}
+
+// ==================== CONTEMPT TRIAL ====================
+function goToContemptTrial() {
+    const defense = document.querySelector('input[name="defense"]:checked').value;
+    let verdict, message, fine;
+
+    if (defense === 'guilty') {
+        verdict = 'GUILTY (Acknowledged)';
+        message = 'The court appreciates your honesty. However, jury duty is not optional. You will serve 40 hours community service and must complete 5 jury cases.';
+        fine = 500;
+    } else if (defense === 'defend') {
+        verdict = 'NOT GUILTY (Misguidedly)';
+        message = 'While I find insufficient evidence of willful criminal contempt, understand that jury service is a civic duty. You will serve 10 mandatory jury cases without refusal option.';
+        fine = 750;
+    } else {
+        verdict = 'CONTEMPT x2 (Smart Mouth)';
+        message = 'Not only did you willfully refuse jury duty, but you\'ve shown disrespect to this court. You will pay $1,200, serve 60 hours community service, AND complete 10 mandatory jury cases.';
+        fine = 1200;
+    }
+
+    const contentDiv = document.getElementById('contempt-verdict-content');
+    contentDiv.innerHTML = `
+        <div style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">VERDICT: ${verdict}</div>
+        <div class="text" style="margin-bottom: 20px;">${message}</div>
+        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 16px; margin: 16px 0;">
+            <div style="font-size: 16px; font-weight: 700; color: #e74c3c;">FINANCIAL PENALTY: $${fine}</div>
+        </div>
+    `;
+
+    showScreen('contempt-verdict-screen');
+}
+
+function acknowledgeContemptVerdict() {
+    gameState.declineCount = 0;
+    sessionStorage.setItem('declineCount', '0');
+    gameState.callInDay = 1;
+    renderCallInWeek();
+    showScreen('callin-screen');
+}
+
+// Initialize - don't render calendar until user clicks Begin
+// renderCallInWeek() will be called from acceptSummons()
+</script>
+</body>
+</html>
