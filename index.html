@@ -1150,6 +1150,34 @@
         </div>
     </div>
 
+    <!-- HUNG JURY SCREEN -->
+    <div id="hung-jury-screen" class="screen">
+        <div class="box">
+            <div class="title">⚖️ HUNG JURY - MISTRIAL</div>
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #e74c3c;">
+                    The jury could not reach a unanimous verdict.
+                </div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 20px;">
+                    The judge has declared a mistrial. The prosecution may choose to retry the case or accept a plea deal.
+                </div>
+                <div class="header" style="margin: 20px 0;">
+                    <div class="header-stat">
+                        <div class="header-label">Guilty Votes</div>
+                        <div class="header-value" id="hung-guilty-count">0</div>
+                    </div>
+                    <div class="header-stat">
+                        <div class="header-label">Not Guilty Votes</div>
+                        <div class="header-value" id="hung-not-guilty-count">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="proceedToResults()">VIEW RESULTS</button>
+            </div>
+        </div>
+    </div>
+
     <!-- RESULTS SCREEN -->
     <div id="results-screen" class="screen">
         <div class="box">
@@ -1275,6 +1303,8 @@ const gameState = {
     verdictReached: false,
     juryVote: null,
     playerFinalVerdictAnswer: null,
+    mistrial: false,
+    conviction: 50,
 };
 
 // ==================== CASE DATA ====================
@@ -2450,6 +2480,13 @@ function assignRandomCase() {
     gameState.currentCase = casesData[caseIdx];
     gameState.npcConvictions = generateJurors(gameState.currentCase.type);
 
+    // Reset verdict-related state for new case
+    gameState.round = 1;
+    gameState.playerVote = null;
+    gameState.juryVote = null;
+    gameState.mistrial = false;
+    gameState.conviction = 50;
+
     renderCaseAssignment();
     showScreen('case-assignment-screen');
 }
@@ -3005,96 +3042,138 @@ function submitPlayerVote() {
 
 function renderRound2() {
     const discussionDiv = document.getElementById('npc-discussion');
-    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">ROUND 2 - DISCUSSION</div><div class="text">Lead Juror Turner: "Let\'s discuss. Those voting NOT GUILTY, please explain."</div></div>';
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">💬 ROUND 2 - FIRST DISCUSSION</div><div class="text"><strong>Lead Juror Turner:</strong> "Those voting NOT GUILTY, please explain your reasoning."</div></div>';
 
     const jury = gameState.npcConvictions.filter(j => j.id !== 7);
-    jury.forEach(npc => {
-        if (npc.conviction < 40) {
-            npc.vote = 'NOT GUILTY';
-            const arg = npc.arguments.notGuilty[Math.floor(Math.random() * npc.arguments.notGuilty.length)];
-            discussionDiv.innerHTML += `
-                <div class="npc-statement">
-                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
-                    <div class="npc-statement-text">"${arg}"</div>
-                </div>
-            `;
-        } else {
-            npc.vote = 'GUILTY';
-        }
+    const fullJury = gameState.npcConvictions;
+
+    // Round 2: Minority (NOT GUILTY) voters explain, shifts happen
+    const notGuiltyVoters = jury.filter(npc => npc.conviction < 50);
+
+    notGuiltyVoters.forEach(npc => {
+        npc.vote = 'NOT GUILTY';
+        const argument = selectArgumentForNPC(npc, 2, jury);
+        npc.argumentsSpoken.push(argument);
+
+        // Apply persuasion - their arguments may shift others
+        applyArgumentPersuasion(npc, argument, fullJury);
+
+        discussionDiv.innerHTML += `
+            <div class="npc-statement">
+                <div class="npc-name">Juror ${npc.id}: ${npc.name} (${npc.personality})</div>
+                <div class="npc-statement-text">"${argument}"</div>
+            </div>
+        `;
+    });
+
+    // Now majority responds
+    const guiltyVoters = jury.filter(npc => npc.conviction >= 50);
+    guiltyVoters.slice(0, 3).forEach(npc => {
+        npc.vote = 'GUILTY';
+        const argument = selectArgumentForNPC(npc, 2, jury);
+        npc.argumentsSpoken.push(argument);
+        applyArgumentPersuasion(npc, argument, fullJury);
+
+        discussionDiv.innerHTML += `
+            <div class="npc-statement">
+                <div class="npc-name">Juror ${npc.id}: ${npc.name} (${npc.personality})</div>
+                <div class="npc-statement-text">"${argument}"</div>
+            </div>
+        `;
     });
 
     updateTally();
-
     document.getElementById('player-voting-section').style.display = 'none';
     document.getElementById('discussion-phase').style.display = 'block';
 }
 
 function renderRound3() {
     const discussionDiv = document.getElementById('npc-discussion');
-    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">ROUND 3 - PRESSURE</div><div class="text">Lead Juror Turner: "We\'re getting close. Let\'s focus on the key evidence."</div></div>';
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">🔥 ROUND 3 - PRESSURE INCREASES</div><div class="text"><strong>Lead Juror Turner:</strong> "Passions are rising. Let\'s focus on the critical evidence and reach consensus."</div></div>';
 
     const jury = gameState.npcConvictions.filter(j => j.id !== 7);
-    const undecided = jury.filter(j => !j.vote || j.conviction > 40 && j.conviction < 60);
+    const fullJury = gameState.npcConvictions;
 
+    // Round 3: More heated discussion, stronger persuasion effects
     jury.forEach(npc => {
-        // Simulate conviction shifts from discussion
-        if (npc.conviction > 50) {
-            npc.conviction += (Math.random() * 10 - 3);
-            npc.vote = 'GUILTY';
-        } else {
-            npc.conviction -= (Math.random() * 10 - 3);
-            npc.vote = 'NOT GUILTY';
-        }
+        npc.vote = npc.conviction > 50 ? 'GUILTY' : 'NOT GUILTY';
+        npc.roundHistory.push({ round: 3, vote: npc.vote, conviction: npc.conviction });
     });
 
-    jury.forEach((npc, idx) => {
-        if (idx < 5) {
-            const arg = npc.vote === 'GUILTY' ? npc.arguments.guilty[idx % npc.arguments.guilty.length] : npc.arguments.notGuilty[idx % npc.arguments.notGuilty.length];
-            discussionDiv.innerHTML += `
-                <div class="npc-statement">
-                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
-                    <div class="npc-statement-text">"${arg}"</div>
-                </div>
-            `;
-        }
+    // Strong speakers make passionate arguments
+    const passionateArgumenters = jury.slice(0, 5);
+    passionateArgumenters.forEach(npc => {
+        const argument = selectArgumentForNPC(npc, 3, jury);
+        npc.argumentsSpoken.push(argument);
+
+        // Round 3 persuasion is more powerful
+        const baseShift = 20;
+        jury.forEach(other => {
+            if (other.id !== npc.id && other.id !== 7) {
+                const argType = determineArgumentType(argument, npc.personality);
+                const susceptibility = other.profile.susceptibilities[argType] || 0.5;
+                const shift = baseShift * susceptibility * 1.2; // 20% stronger in round 3
+
+                if (npc.conviction > other.conviction) {
+                    other.conviction = Math.min(95, other.conviction + shift * 0.5);
+                } else if (npc.conviction < other.conviction) {
+                    other.conviction = Math.max(25, other.conviction - shift * 0.5);
+                }
+            }
+        });
+
+        discussionDiv.innerHTML += `
+            <div class="npc-statement">
+                <div class="npc-name">Juror ${npc.id}: ${npc.name} (${npc.personality})</div>
+                <div class="npc-statement-text"><em>"${argument}"</em></div>
+            </div>
+        `;
     });
 
     updateTally();
-
     document.getElementById('player-voting-section').style.display = 'none';
     document.getElementById('discussion-phase').style.display = 'block';
+
+    // Trigger bathroom break opportunity after Round 3
+    setTimeout(() => {
+        showBathroomBreakTemptations();
+    }, 3000);
 }
 
 function renderRound4() {
     const discussionDiv = document.getElementById('npc-discussion');
-    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">ROUND 4 - FINAL VOTE</div><div class="text">⚠️ Bathroom break complete. Lead Juror Turner: "We need unanimity. Final round."</div></div>';
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">🏁 ROUND 4 - FINAL PUSH</div><div class="text"><strong>Lead Juror Turner:</strong> "We must reach unanimity. This is our final chance to persuade."</div></div>';
 
     const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+    const fullJury = gameState.npcConvictions;
 
-    // Final conviction shifts - most jurors move toward majority
-    const guiltyCount = jury.filter(j => j.vote === 'GUILTY').length + (gameState.playerVote === 'GUILTY' ? 1 : 0);
-    const majority = guiltyCount > (jury.length + 1) / 2;
+    // Round 4: Final shifts toward consensus
+    const guiltyCount = jury.filter(j => j.conviction >= 50).length + (gameState.playerVote === 'GUILTY' ? 1 : 0);
+    const majority = guiltyCount > 6;
 
     jury.forEach(npc => {
+        // Strong pressure toward majority in final round
         if (majority && npc.conviction < 50) {
-            npc.conviction = Math.min(70, npc.conviction + 15);
-            npc.vote = 'GUILTY';
-        } else if (!majority && npc.conviction > 50) {
-            npc.conviction = Math.max(30, npc.conviction - 15);
-            npc.vote = 'NOT GUILTY';
+            npc.conviction = Math.min(90, npc.conviction + 20);
+        } else if (!majority && npc.conviction >= 50) {
+            npc.conviction = Math.max(30, npc.conviction - 20);
         }
+        npc.vote = npc.conviction > 50 ? 'GUILTY' : 'NOT GUILTY';
+        npc.roundHistory.push({ round: 4, vote: npc.vote, conviction: npc.conviction });
     });
 
-    jury.forEach((npc, idx) => {
-        if (idx < 4) {
-            const arg = npc.vote === 'GUILTY' ? npc.arguments.guilty[Math.floor(Math.random() * npc.arguments.guilty.length)] : npc.arguments.notGuilty[Math.floor(Math.random() * npc.arguments.notGuilty.length)];
-            discussionDiv.innerHTML += `
-                <div class="npc-statement">
-                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
-                    <div class="npc-statement-text">"${arg}"</div>
-                </div>
-            `;
-        }
+    // Final desperate arguments
+    jury.slice(0, 4).forEach(npc => {
+        const argument = selectArgumentForNPC(npc, 4, jury);
+        npc.argumentsSpoken.push(argument);
+        applyArgumentPersuasion(npc, argument, fullJury);
+
+        discussionDiv.innerHTML += `
+            <div class="npc-statement">
+                <div class="npc-name">Juror ${npc.id}: ${npc.name} (${npc.personality})</div>
+                <div class="npc-statement-text"><strong>"${argument}"</strong></div>
+            </div>
+        `;
     });
 
     updateTally();
@@ -3126,25 +3205,150 @@ function continueDiscussion() {
     }
 }
 
+function showBathroomBreakTemptations() {
+    const bathroomSection = document.getElementById('bathroom-break-section');
+    bathroomSection.style.display = 'block';
+
+    const temptationsDiv = document.getElementById('temptation-options');
+    temptationsDiv.innerHTML = '';
+
+    const temptations = [
+        {
+            name: '📱 Check Your Phone',
+            description: 'Scroll through messages and social media for a few minutes. Could you really miss that much?',
+            consequence: 'Your focus is scattered during Round 4. Your conviction becomes less stable.',
+            effect: (jury) => {
+                // Player conviction becomes less stable (0-20% swing either way)
+                if (gameState.playerVote === 'GUILTY') {
+                    gameState.conviction = Math.max(30, gameState.conviction - 15);
+                } else {
+                    gameState.conviction = Math.min(70, gameState.conviction + 15);
+                }
+            }
+        },
+        {
+            name: '📰 Read the Courthouse Newspaper',
+            description: 'There\'s a newspaper on the sink. Just a quick read won\'t hurt...',
+            consequence: 'You learn some interesting context. Your perspective is clearer.',
+            effect: (jury) => {
+                // Minor positive effect - strengthens conviction slightly
+                if (gameState.playerVote === 'GUILTY') {
+                    gameState.conviction = Math.min(95, gameState.conviction + 8);
+                } else {
+                    gameState.conviction = Math.max(25, gameState.conviction - 8);
+                }
+            }
+        },
+        {
+            name: '👂 Eavesdrop on Lawyers Outside',
+            description: 'You hear the prosecution and defense talking in the hallway. One side seems really confident...',
+            consequence: 'You pick up on some crucial points you missed. A juror becomes more convinced.',
+            effect: (jury) => {
+                // Shifts one random juror slightly toward player's position
+                if (jury.length > 0) {
+                    const randomJuror = jury[Math.floor(Math.random() * jury.length)];
+                    if (gameState.playerVote === 'GUILTY') {
+                        randomJuror.conviction = Math.min(85, randomJuror.conviction + 12);
+                    } else {
+                        randomJuror.conviction = Math.max(35, randomJuror.conviction - 12);
+                    }
+                }
+            }
+        }
+    ];
+
+    temptations.forEach((tempt, index) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.className = 'option-card';
+        tempDiv.style.marginBottom = '12px';
+        tempDiv.innerHTML = `
+            <div style="font-weight: 600; margin-bottom: 8px;">${tempt.name}</div>
+            <div style="font-size: 13px; color: #666; margin-bottom: 10px;">${tempt.description}</div>
+            <div style="font-size: 12px; color: #27ae60; font-style: italic;">Consequence: ${tempt.consequence}</div>
+        `;
+        tempDiv.onclick = () => chooseTemptation(tempt, index);
+        temptationsDiv.appendChild(tempDiv);
+    });
+
+    // Add skip option
+    const skipDiv = document.createElement('div');
+    skipDiv.className = 'option-card';
+    skipDiv.style.marginTop = '16px';
+    skipDiv.style.backgroundColor = '#f0f0f0';
+    skipDiv.innerHTML = `
+        <div style="font-weight: 600;">✋ Skip Temptation</div>
+        <div style="font-size: 13px; color: #666;">Return to deliberations with a clear mind.</div>
+    `;
+    skipDiv.onclick = () => chooseTemptation(null, -1);
+    temptationsDiv.appendChild(skipDiv);
+
+    // Hide discussion phase while bathroom break is active
+    document.getElementById('discussion-phase').style.display = 'none';
+}
+
+function chooseTemptation(temptation, index) {
+    const bathroomSection = document.getElementById('bathroom-break-section');
+    const temptationsDiv = document.getElementById('temptation-options');
+
+    // Apply effect if temptation was chosen
+    if (temptation) {
+        temptation.effect(gameState.npcConvictions);
+    }
+
+    // Show confirmation
+    temptationsDiv.innerHTML = `
+        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 6px;">
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">
+                ${temptation ? '✓ Temptation taken.' : '✓ Returned with clear mind.'}
+            </div>
+            <div style="font-size: 13px; color: #666; margin-bottom: 20px;">
+                Heading back to the courtroom...
+            </div>
+        </div>
+    `;
+
+    // Proceed to Round 4 after 2 seconds
+    setTimeout(() => {
+        bathroomSection.style.display = 'none';
+        document.getElementById('discussion-phase').style.display = 'block';
+        renderRound4();
+    }, 2000);
+}
+
 function calculateFinalVerdict() {
     const jury = gameState.npcConvictions;
     const guiltyVotes = jury.filter(j => j.vote === 'GUILTY').length;
+    const notGuiltyVotes = jury.filter(j => j.vote === 'NOT GUILTY').length;
     const totalJurors = jury.length;
 
-    if (guiltyVotes > totalJurors / 2) {
+    // Check for hung jury (6-6 split or inability to reach consensus)
+    if (Math.abs(guiltyVotes - notGuiltyVotes) === 0) {
+        gameState.juryVote = 'HUNG JURY';
+        gameState.mistrial = true;
+    } else if (guiltyVotes > totalJurors / 2) {
         gameState.juryVote = 'GUILTY';
     } else {
         gameState.juryVote = 'NOT GUILTY';
     }
 
-    renderVerdictScreen();
+    if (gameState.mistrial) {
+        renderHungJuryScreen(guiltyVotes, notGuiltyVotes);
+    } else {
+        renderVerdictScreen();
+    }
 }
 
 function renderVerdictScreen() {
     const verdict = gameState.juryVote;
     document.getElementById('final-verdict').textContent = verdict;
-    document.getElementById('verdict-by').textContent = 'Jury Verdict (Unanimous)';
+    document.getElementById('verdict-by').textContent = 'Jury Verdict (Majority Rule)';
     showScreen('verdict-screen');
+}
+
+function renderHungJuryScreen(guiltyVotes, notGuiltyVotes) {
+    document.getElementById('hung-guilty-count').textContent = guiltyVotes;
+    document.getElementById('hung-not-guilty-count').textContent = notGuiltyVotes;
+    showScreen('hung-jury-screen');
 }
 
 function proceedToResults() {
@@ -3155,10 +3359,14 @@ function proceedToResults() {
 
 // ==================== RESULTS ====================
 function renderResults() {
+    const isMistrial = gameState.mistrial === true;
     const match = gameState.playerFinalVerdictAnswer === gameState.juryVote;
     const caseCredits = gameState.currentCase.duration.includes('5-day') ? 50 : gameState.currentCase.duration.includes('4-day') ? 40 : gameState.currentCase.duration.includes('3-day') ? 30 : 20;
 
-    gameState.totalCredits += caseCredits;
+    // Hung jury gives reduced credits (half)
+    const finalCredits = isMistrial ? Math.floor(caseCredits / 2) : caseCredits;
+
+    gameState.totalCredits += finalCredits;
     gameState.casesCompleted++;
     sessionStorage.setItem('totalCredits', gameState.totalCredits);
     sessionStorage.setItem('casesCompleted', gameState.casesCompleted);
@@ -3167,7 +3375,11 @@ function renderResults() {
     document.getElementById('jury-verdict-result').textContent = gameState.juryVote;
 
     const matchDiv = document.getElementById('match-result');
-    if (match) {
+    if (isMistrial) {
+        matchDiv.classList.add('disagreed');
+        matchDiv.classList.remove('agreed');
+        matchDiv.textContent = '⚠️ MISTRIAL - UNABLE TO REACH VERDICT';
+    } else if (match) {
         matchDiv.classList.add('agreed');
         matchDiv.classList.remove('disagreed');
         matchDiv.textContent = '✓ VERDICT MATCH';
@@ -3183,7 +3395,7 @@ function renderResults() {
     `;
     document.getElementById('real-case-info').innerHTML = caseInfo;
 
-    document.getElementById('credits-earned').textContent = caseCredits;
+    document.getElementById('credits-earned').textContent = finalCredits;
     document.getElementById('total-credits').textContent = gameState.totalCredits;
     document.getElementById('cases-completed').textContent = gameState.casesCompleted;
 }
