@@ -881,6 +881,43 @@
         </div>
     </div>
 
+    <!-- ATTORNEY CHALLENGE SCREEN -->
+    <div id="attorney-challenge-screen" class="screen">
+        <div class="box">
+            <div class="title" style="color: #e74c3c;">⚖️ ATTORNEY CHALLENGE</div>
+            <div class="courtroom-scene">
+                An attorney stands and objects to your presence on the jury.
+            </div>
+
+            <div class="speaker-box">
+                <div class="speaker-name" id="challenge-attorney-name"></div>
+                <div class="speaker-text" id="challenge-text"></div>
+            </div>
+
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                <div style="font-weight: 600; color: #856404; margin-bottom: 12px;">⚖️ Judge's Question to You:</div>
+                <div style="color: #856404;">How do you respond to this challenge? Choose carefully—your answer determines whether you stay on the jury.</div>
+            </div>
+
+            <div id="challenge-responses"></div>
+
+            <div class="button-group">
+                <button class="primary" onclick="submitChallengeDefense()">SUBMIT RESPONSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ATTORNEY CHALLENGE OUTCOME SCREEN -->
+    <div id="challenge-outcome-screen" class="screen">
+        <div class="box">
+            <div class="title" id="challenge-outcome-title">⚖️ CHALLENGE DECISION</div>
+            <div id="challenge-outcome-content"></div>
+            <div class="button-group">
+                <button class="primary" onclick="proceedAfterChallenge()">CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TRIAL PHASE 1: JUDGE'S OPENING -->
     <div id="trial-judge-opening-screen" class="screen">
         <div class="box">
@@ -961,19 +998,30 @@
         </div>
     </div>
 
-    <!-- TRIAL PHASE 5: CROSS-EXAMINATION -->
+    <!-- TRIAL PHASE 5: CROSS-EXAMINATION (IMPACTFUL ONLY) -->
     <div id="trial-cross-exam-screen" class="screen">
         <div class="box">
-            <div class="trial-day-header">⚔️ CROSS-EXAMINATION</div>
+            <div class="trial-day-header">⚔️ CROSS-EXAMINATION - KEY MOMENT</div>
             <div class="courtroom-scene">
-                The opposing attorney rises to question the witness's testimony.
+                The opposing attorney rises to question the witness. This exchange could sway the case.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name" id="cross-exam-witness-label"></div>
+                <div class="speaker-text" id="cross-exam-witness-response">
+                    <em>[Witness answers on the stand]</em>
+                </div>
             </div>
             <div class="speaker-box">
                 <div class="speaker-name" id="cross-exam-attorney"></div>
                 <div class="speaker-text" id="cross-exam-text"></div>
             </div>
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 20px; border-radius: 4px;">
+                <div style="font-size: 13px; color: #856404;">
+                    💡 <strong>Verdict Impact:</strong> <span id="cross-exam-impact-note">This could shift the jury's thinking</span>
+                </div>
+            </div>
             <div class="button-group">
-                <button class="primary" onclick="advanceTrial()">CONTINUE</button>
+                <button class="primary" onclick="continueFromCrossExam()">CONTINUE</button>
             </div>
         </div>
     </div>
@@ -1249,6 +1297,29 @@ const casesData = [
             { name: 'Witness Testimony', description: 'CFO\'s assistant confirms falsified invoices' },
             { name: 'Financial Report', description: 'Audit shows $2.3M discrepancies' }
         ],
+        crossExaminations: [
+            {
+                witness: 'CFO\'s Assistant',
+                attorney: 'Defense',
+                question: 'Isn\'t it true that you made several accounting errors yourself during this period? And couldn\'t some of these transfers have been legitimate reimbursements you misrecorded?',
+                impact: true,  // Swings verdict - could create reasonable doubt about witness reliability
+                npcConvictionShift: -15  // Reduces conviction likelihood for NPCs
+            },
+            {
+                witness: 'Financial Auditor',
+                attorney: 'Prosecution',
+                question: 'The shell companies had no legitimate business purpose, correct? And the only person with access to create these shell companies was the defendant?',
+                impact: false,  // Minor - reinforces existing evidence
+                npcConvictionShift: 0
+            },
+            {
+                witness: 'Defendant Robert Chen',
+                attorney: 'Prosecution',
+                question: 'You claim these were authorized transfers. Where is the authorization? Who authorized them?',
+                impact: true,  // Swings verdict - defendant cannot produce authorization, creates guilty impression
+                npcConvictionShift: 25  // Increases conviction likelihood
+            }
+        ],
         realCaseBasis: 'Inspired by Enron-style embezzlement cases',
         actualVerdict: 'In real similar cases, conviction rates are 85% for clear evidence',
     },
@@ -1269,6 +1340,22 @@ const casesData = [
             { name: 'Trading Records', description: 'Unusual stock purchases days before public announcement' },
             { name: 'Text Messages', description: 'Cryptic messages about "big deal coming"' },
             { name: 'Expert Testimony', description: 'Statistical improbability of coincidence' }
+        ],
+        crossExaminations: [
+            {
+                witness: 'Prosecution Expert',
+                attorney: 'Defense',
+                question: 'Isn\'t it true that many professional traders make similar trades based on public information and patterns? Couldn\'t the defendant have simply done the same research?',
+                impact: true,  // Creates reasonable doubt
+                npcConvictionShift: -20
+            },
+            {
+                witness: 'Defendant David Martinez',
+                attorney: 'Prosecution',
+                question: 'You claim you researched the company independently. Yet you made this trade just days after calling a board member. That\'s quite a coincidence, isn\'t it?',
+                impact: true,  // Highlights suspicious timing
+                npcConvictionShift: 30
+            }
         ],
         realCaseBasis: 'Similar to Martha Stewart insider trading case',
         actualVerdict: 'Insider trading cases have 80% conviction rate when evidence is strong',
@@ -1696,27 +1783,74 @@ const casesData = [
 ];
 
 // ==================== JUROR TEMPLATES ====================
+// ==================== ENHANCED NPC PERSONALITY SYSTEM ====================
+const personalityProfiles = {
+    Logical: {
+        name: 'Logical',
+        description: 'Evidence-focused, analytical, needs proof',
+        argumentStyle: 'fact-based',
+        susceptibilities: { logic: 0.9, emotion: 0.3, authority: 0.6, practical: 0.7 },
+        flexibility: 0.6
+    },
+    Emotional: {
+        name: 'Emotional',
+        description: 'Story-focused, intuitive, feels the case',
+        argumentStyle: 'narrative',
+        susceptibilities: { logic: 0.5, emotion: 0.95, authority: 0.5, practical: 0.4 },
+        flexibility: 0.8
+    },
+    Skeptical: {
+        name: 'Skeptical',
+        description: 'Questions everything, doubts witnesses',
+        argumentStyle: 'challenge',
+        susceptibilities: { logic: 0.8, emotion: 0.2, authority: 0.3, practical: 0.7 },
+        flexibility: 0.4
+    },
+    Practical: {
+        name: 'Practical',
+        description: 'Real-world thinking, pragmatic',
+        argumentStyle: 'consequence',
+        susceptibilities: { logic: 0.7, emotion: 0.4, authority: 0.6, practical: 0.95 },
+        flexibility: 0.7
+    },
+    Empathetic: {
+        name: 'Empathetic',
+        description: 'Fairness-focused, sympathetic',
+        argumentStyle: 'compassion',
+        susceptibilities: { logic: 0.6, emotion: 0.9, authority: 0.4, practical: 0.5 },
+        flexibility: 0.85
+    },
+    Authoritative: {
+        name: 'Authoritative',
+        description: 'Trusts experts, follows rules',
+        argumentStyle: 'authority',
+        susceptibilities: { logic: 0.7, emotion: 0.3, authority: 0.95, practical: 0.8 },
+        flexibility: 0.5
+    }
+};
+
 function generateJurors(caseType) {
     const baseJurors = [
-        { name: 'Sarah Chen', role: 'Accountant', personality: 'Analytical', baseConviction: 75 },
-        { name: 'Marcus Johnson', role: 'Teacher', personality: 'Logical', baseConviction: 68 },
-        { name: 'Patricia Brown', role: 'Retired', personality: 'Traditional', baseConviction: 72 },
+        { name: 'Sarah Chen', role: 'Accountant', personality: 'Logical', baseConviction: 75 },
+        { name: 'Marcus Johnson', role: 'Teacher', personality: 'Empathetic', baseConviction: 68 },
+        { name: 'Patricia Brown', role: 'Retired', personality: 'Authoritative', baseConviction: 72 },
         { name: 'David Martinez', role: 'Construction Worker', personality: 'Skeptical', baseConviction: 55 },
         { name: 'Jennifer Lee', role: 'Nurse', personality: 'Empathetic', baseConviction: 65 },
-        { name: 'Robert Kim', role: 'Software Engineer', personality: 'Analytical', baseConviction: 70 },
+        { name: 'Robert Kim', role: 'Software Engineer', personality: 'Logical', baseConviction: 70 },
         { name: 'Michael (Player)', role: 'You', personality: 'Neutral', baseConviction: null },
         { name: 'Linda Garcia', role: 'Social Worker', personality: 'Empathetic', baseConviction: 60 },
         { name: 'James Wilson', role: 'Business Owner', personality: 'Skeptical', baseConviction: 50 },
         { name: 'Susan Taylor', role: 'Librarian', personality: 'Logical', baseConviction: 67 },
         { name: 'Thomas Anderson', role: 'Mechanic', personality: 'Practical', baseConviction: 62 },
-        { name: 'Maria Lopez', role: 'Artist', personality: 'Intuitive', baseConviction: 58 }
+        { name: 'Maria Lopez', role: 'Artist', personality: 'Emotional', baseConviction: 58 }
     ];
 
-    // Adjust convictions based on case type
+    // Adjust convictions based on case type and personality
     let convictions = baseJurors.map((j, idx) => {
         let conviction = j.baseConviction;
         if (!conviction) return null; // Skip player
 
+        // Case type adjustments
         if (caseType === 'WHITE COLLAR') {
             if (j.role === 'Accountant' || j.role === 'Software Engineer') conviction += 8;
             if (j.role === 'Business Owner') conviction -= 10;
@@ -1728,26 +1862,33 @@ function generateJurors(caseType) {
             if (j.role === 'Business Owner') conviction -= 8;
         }
 
+        // Add random variation
         conviction = Math.min(95, Math.max(25, conviction + Math.random() * 10 - 5));
         return conviction;
     });
 
-    return baseJurors.map((j, idx) => ({
-        id: idx + 1,
-        name: j.name,
-        role: j.role,
-        personality: j.personality,
-        conviction: convictions[idx],
-        startingConviction: convictions[idx],
-        allies: getRandomAllies(idx),
-        flexibleity: Math.random(),
-        vote: null,
-        roundHistory: [],
-        arguments: {
-            guilty: getArgumentsForPersonality(j.personality, 'guilty', caseType),
-            notGuilty: getArgumentsForPersonality(j.personality, 'notGuilty', caseType)
-        }
-    }));
+    return baseJurors.map((j, idx) => {
+        const profile = personalityProfiles[j.personality];
+        return {
+            id: idx + 1,
+            name: j.name,
+            role: j.role,
+            personality: j.personality,
+            profile: profile,
+            conviction: convictions[idx],
+            startingConviction: convictions[idx],
+            allies: getRandomAllies(idx),
+            flexibility: profile ? profile.flexibility : 0.6,
+            vote: null,
+            roundHistory: [],
+            argumentsSpoken: [],
+            persuadedBy: [],
+            arguments: {
+                guilty: generateArgumentPool(j.personality, 'guilty', caseType),
+                notGuilty: generateArgumentPool(j.personality, 'notGuilty', caseType)
+            }
+        };
+    });
 }
 
 function getRandomAllies(id) {
@@ -1761,84 +1902,174 @@ function getRandomAllies(id) {
     return allies;
 }
 
-function getArgumentsForPersonality(personality, vote, caseType) {
+function generateArgumentPool(personality, vote, caseType) {
     const guiltyArgs = {
-        Analytical: [
-            "The evidence clearly shows guilt beyond reasonable doubt.",
-            "The numbers don't lie. Follow the trail.",
-            "The logical conclusion is guilt."
-        ],
         Logical: [
-            "The facts support guilt.",
-            "This conclusion is inescapable.",
-            "The evidence builds an overwhelming case."
+            "The evidence clearly shows guilt beyond reasonable doubt.",
+            "The facts speak for themselves. The defendant is guilty.",
+            "Following the logical chain of evidence, guilt is the only conclusion.",
+            "The prosecution has proven their case beyond a reasonable doubt.",
+            "Each piece of evidence points definitively to guilt.",
+            "There is no reasonable alternative explanation to guilt."
         ],
-        Empathetic: [
-            "Think about the victim and what they've endured.",
-            "I'm convinced of guilt because of the victim's testimony.",
-            "The human suffering here demands accountability."
-        ],
-        Traditional: [
-            "In my experience, guilt is clear.",
-            "This case reminds me of similar situations I've seen.",
-            "My instinct and the evidence say guilty."
+        Emotional: [
+            "Think about the victim and what they've suffered.",
+            "The victim's testimony moved me. I believe them. The defendant is guilty.",
+            "This defendant showed no remorse. That tells me they're guilty.",
+            "The human suffering demands we hold this person accountable.",
+            "My heart tells me the defendant is responsible for this.",
+            "The victim deserves justice. The defendant must be found guilty."
         ],
         Skeptical: [
-            "I'm not fully convinced, but the evidence leans guilty.",
-            "There's more evidence pointing to guilt than innocence.",
-            "Despite my skepticism, the case is convincing."
+            "I started skeptical, but the prosecution's case won me over. Guilty.",
+            "Even someone as doubtful as me can see the defendant is guilty.",
+            "I questioned everything, and everything points to guilt.",
+            "Despite my doubts about the system, this case proves guilt.",
+            "The evidence is too overwhelming. Guilty."
         ],
         Practical: [
-            "The practical reading of evidence shows guilt.",
-            "Common sense says guilty.",
-            "The simplest explanation is guilt."
+            "Practically speaking, the defendant did this. It's clear.",
+            "Common sense and the facts both say guilty.",
+            "The simplest, most practical reading is guilty.",
+            "What actually happened is the defendant committed this crime.",
+            "In the real world, this is guilt. Straight up."
         ],
-        Intuitive: [
-            "I just have a strong feeling about guilt here.",
-            "Something about this case tells me guilty.",
-            "My instinct leans toward guilt."
+        Empathetic: [
+            "The defendant is guilty, and we have to protect others from them.",
+            "I feel for anyone affected—the defendant caused this harm. Guilty.",
+            "The accountability here is clear. The defendant must be convicted.",
+            "This is about justice and protection. The defendant is guilty.",
+            "I believe the evidence. The defendant is responsible. Guilty."
+        ],
+        Authoritative: [
+            "The law is clear. The evidence meets the legal standard. Guilty.",
+            "Expert witnesses testified to guilt. The law supports conviction.",
+            "By the law and the evidence, this defendant is guilty.",
+            "Legal precedent and facts both point to conviction.",
+            "This case meets every legal requirement for guilt."
         ]
     };
 
     const notGuiltyArgs = {
-        Analytical: [
-            "Too many inconsistencies in the evidence.",
-            "The numbers don't add up.",
-            "Reasonable doubt exists."
-        ],
         Logical: [
-            "The logic breaks down under scrutiny.",
-            "I cannot accept this flawed argument.",
-            "The reasoning has too many gaps."
+            "Too many inconsistencies in the evidence for a conviction.",
+            "The logical gaps in the prosecution's case are undeniable.",
+            "Reasonable doubt clearly exists. Not guilty.",
+            "The evidence doesn't logically prove guilt beyond doubt.",
+            "Flaws in the chain of evidence require a not guilty vote.",
+            "The reasoning needed to convict is flawed. Not guilty."
         ],
-        Empathetic: [
-            "I'm concerned about the defendant's side.",
-            "The defendant deserves the benefit of doubt.",
-            "We haven't heard enough to convict."
-        ],
-        Traditional: [
-            "My experience tells me to be cautious here.",
-            "Similar cases I've seen went the other way.",
-            "Something feels off about this case."
+        Emotional: [
+            "I empathize with the defendant. They haven't been proven guilty.",
+            "The defendant deserves the presumption of innocence. Not guilty.",
+            "I can't in good conscience convict without stronger evidence.",
+            "This person hasn't been proven guilty. Not guilty.",
+            "The defendant's struggle is real. I cannot convict. Not guilty.",
+            "Not guilty. We must protect the innocent from wrongful conviction."
         ],
         Skeptical: [
-            "I'm skeptical of the prosecution's case.",
-            "The evidence isn't strong enough.",
-            "I cannot vote guilty with this doubt."
+            "I don't trust the prosecution's case enough. Not guilty.",
+            "Too many holes for me to vote guilty.",
+            "I remain unconvinced. Reasonable doubt exists. Not guilty.",
+            "The evidence doesn't meet my threshold. Not guilty.",
+            "I'm skeptical of conviction without stronger proof. Not guilty."
         ],
         Practical: [
-            "Practically speaking, this isn't proven.",
-            "Common sense says not guilty.",
-            "We don't have enough here."
+            "Practically, the evidence doesn't add up. Not guilty.",
+            "Real-world analysis: innocent until proven otherwise. Not guilty.",
+            "Common sense says there's reasonable doubt here. Not guilty.",
+            "In practical terms, this isn't a solid case. Not guilty.",
+            "The actual facts don't support conviction. Not guilty."
         ],
-        Intuitive: [
-            "I have a strong feeling about innocence.",
-            "Something tells me the defendant is innocent.",
-            "My gut says not guilty."
+        Empathetic: [
+            "The defendant could be innocent. I cannot convict them. Not guilty.",
+            "I feel the weight of possibly ruining an innocent life. Not guilty.",
+            "Without absolute certainty, I must vote not guilty.",
+            "This person deserves mercy and the benefit of doubt. Not guilty.",
+            "I cannot vote to convict someone who might be innocent. Not guilty."
+        ],
+        Authoritative: [
+            "The law requires proof beyond reasonable doubt. This doesn't meet that. Not guilty.",
+            "Legal standards and evidence both say not guilty.",
+            "By law, insufficient evidence means not guilty.",
+            "The legal burden hasn't been met. Not guilty.",
+            "Expert consensus is there's reasonable doubt. Not guilty."
         ]
     };
 
     return vote === 'guilty' ? (guiltyArgs[personality] || guiltyArgs.Logical) : (notGuiltyArgs[personality] || notGuiltyArgs.Logical);
+}
+
+// ==================== DYNAMIC ARGUMENT SELECTION ====================
+function selectArgumentForNPC(npc, round, jury) {
+    // Get NPC's argument pool based on their conviction
+    const voteType = npc.conviction > 50 ? 'guilty' : 'notGuilty';
+    const argumentPool = npc.arguments[voteType];
+
+    // Select an argument based on conviction strength and round
+    let index = 0;
+    if (round === 1) {
+        index = Math.floor(Math.random() * Math.min(2, argumentPool.length));
+    } else if (round === 2) {
+        index = Math.floor(Math.random() * Math.min(4, argumentPool.length));
+    } else if (round === 3) {
+        index = Math.floor(Math.random() * argumentPool.length);
+    } else {
+        index = Math.floor(Math.random() * argumentPool.length);
+    }
+
+    return argumentPool[index] || argumentPool[0];
+}
+
+// ==================== PERSUASION SYSTEM ====================
+function applyArgumentPersuasion(speakingNPC, argument, jury) {
+    // Determine which NPCs are susceptible to this argument
+    const convincingStrength = 15; // Base conviction shift
+
+    jury.forEach(npc => {
+        if (npc.id === speakingNPC.id || npc.id === 7) return; // Skip speaker and player
+
+        // Check if NPC is susceptible to this speaker's personality type
+        const profile = speakingNPC.profile;
+        if (!profile) return;
+
+        // Determine argument type based on content
+        const argumentType = determineArgumentType(argument, speakingNPC.personality);
+
+        // Calculate persuasibility based on NPC's susceptibility and conviction distance
+        const susceptibility = npc.profile.susceptibilities[argumentType] || 0.5;
+        const convictionDifference = Math.abs(npc.conviction - speakingNPC.conviction);
+        const distanceFactor = convictionDifference > 40 ? 0.3 : (convictionDifference > 20 ? 0.6 : 1.0);
+
+        // Calculate shift
+        const shift = convincingStrength * susceptibility * distanceFactor;
+
+        // Apply shift (moving toward speaker's conviction)
+        if (speakingNPC.conviction > npc.conviction) {
+            npc.conviction = Math.min(95, npc.conviction + shift);
+        } else if (speakingNPC.conviction < npc.conviction) {
+            npc.conviction = Math.max(25, npc.conviction - shift);
+        }
+
+        npc.persuadedBy.push({
+            speaker: speakingNPC.name,
+            argument: argument.substring(0, 50) + '...'
+        });
+    });
+}
+
+function determineArgumentType(argument, personality) {
+    // Categorize arguments by type
+    if (argument.includes('logic') || argument.includes('fact') || argument.includes('evidence') || argument.includes('reason')) {
+        return 'logic';
+    } else if (argument.includes('feel') || argument.includes('suffer') || argument.includes('justice') || argument.includes('heart')) {
+        return 'emotion';
+    } else if (argument.includes('law') || argument.includes('legal') || argument.includes('expert') || argument.includes('standard')) {
+        return 'authority';
+    } else if (argument.includes('practical') || argument.includes('common sense') || argument.includes('real')) {
+        return 'practical';
+    }
+    return 'logic'; // Default to logic
 }
 
 // ==================== DAILY FLAVOR TEXT ====================
@@ -1879,66 +2110,174 @@ const voirDireQuestions = {
         {
             q: 'Have you or anyone close to you worked in finance or accounting?',
             context: 'This may bias your evaluation of financial evidence.',
-            options: ['Yes, extensively', 'Yes, some experience', 'No financial background', 'Prefer not to answer']
+            options: ['Yes, extensively', 'Yes, some experience', 'No financial background', 'Prefer not to answer'],
+            challengeable: true,
+            challengeAnswers: [0, 1],  // Challenge if "extensively" or "some experience"
+            challengeText: 'Your Honor, the prospective juror\'s background in finance could bias their evaluation of complex financial evidence. We request a challenge for cause.',
+            defenseOptions: [
+                'My experience actually helps me understand complex financial details objectively.',
+                'I can set aside my background and judge based solely on the evidence presented.',
+                'Many people have finance experience. That doesn\'t automatically disqualify them.'
+            ],
+            winningDefenses: [0, 1]  // Options 0 and 1 win the challenge
         },
         {
             q: 'Do you believe circumstantial financial evidence is as compelling as direct evidence?',
             context: 'White collar cases often rely on financial patterns.',
-            options: ['Yes, equally compelling', 'Somewhat compelling', 'Less compelling', 'Not compelling']
+            options: ['Yes, equally compelling', 'Somewhat compelling', 'Less compelling', 'Not compelling'],
+            challengeable: true,
+            challengeAnswers: [2, 3],  // Challenge if skeptical of circumstantial evidence
+            challengeText: 'The prospective juror has expressed skepticism about circumstantial financial evidence. In white collar cases, we rely heavily on such evidence. We challenge for cause.',
+            defenseOptions: [
+                'I can evaluate circumstantial evidence fairly alongside direct evidence.',
+                'I understand that financial patterns can prove guilt beyond a reasonable doubt.',
+                'I didn\'t mean to suggest circumstantial evidence is unreliable—just different from direct.'
+            ],
+            winningDefenses: [0, 1]
         },
         {
             q: 'How do you feel about wealthy defendants?',
             context: 'Does their status affect your judgment?',
-            options: ['I judge them fairly', 'I\'m skeptical of wealthy people', 'I sympathize with them', 'Status shouldn\'t matter']
+            options: ['I judge them fairly', 'I\'m skeptical of wealthy people', 'I sympathize with them', 'Status shouldn\'t matter'],
+            challengeable: true,
+            challengeAnswers: [1, 2],  // Challenge if skeptical of or sympathetic to wealthy people
+            challengeText: 'The prospective juror has indicated a bias—either skepticism or sympathy—toward wealthy defendants. This will affect their judgment. Challenge for cause.',
+            defenseOptions: [
+                'I misspoke. I judge ALL defendants fairly, regardless of wealth.',
+                'Wealth is irrelevant to my judgment. I focus on evidence alone.',
+                'I can set aside any feelings about wealth and judge based on facts.'
+            ],
+            winningDefenses: [0, 1, 2]
         },
         {
             q: 'Have you been a victim of fraud or financial crime?',
             context: 'This experience may bias your judgment.',
-            options: ['Yes, personally', 'Yes, family member', 'No direct experience', 'Prefer not to answer']
+            options: ['Yes, personally', 'Yes, family member', 'No direct experience', 'Prefer not to answer'],
+            challengeable: true,
+            challengeAnswers: [0, 1],  // Challenge if victim of fraud
+            challengeText: 'The prospective juror has experienced fraud. This personal trauma may cloud their judgment in this case. We request dismissal for cause.',
+            defenseOptions: [
+                'My experience taught me to evaluate evidence carefully, which helps me be a fair juror.',
+                'While I\'ve experienced fraud, I can judge this case objectively based on the facts.',
+                'I wouldn\'t let my personal experience unfairly bias me against this defendant.'
+            ],
+            winningDefenses: [0, 1]
         }
     ],
     'SERIOUS CRIME': [
         {
             q: 'Have you or a family member been a victim of violence?',
             context: 'This may affect your judgment in murder cases.',
-            options: ['Yes, personally', 'Yes, family member', 'No direct experience', 'Prefer not to answer']
+            options: ['Yes, personally', 'Yes, family member', 'No direct experience', 'Prefer not to answer'],
+            challengeable: true,
+            challengeAnswers: [0, 1],
+            challengeText: 'The prospective juror has been a victim of violence. This trauma could affect their judgment in a serious crime case. Challenge for cause.',
+            defenseOptions: [
+                'My experience with violence taught me to demand strong evidence before convicting.',
+                'I can separate my experience from this case and judge fairly.',
+                'I understand the justice system and can apply it objectively.'
+            ],
+            winningDefenses: [1, 2]
         },
         {
             q: 'What\'s your opinion on self-defense? When is it justified?',
             context: 'This case involves potential self-defense claims.',
-            options: ['Very narrow circumstances', 'Reasonable circumstances', 'Broad circumstances', 'No clear position']
+            options: ['Very narrow circumstances', 'Reasonable circumstances', 'Broad circumstances', 'No clear position'],
+            challengeable: true,
+            challengeAnswers: [2],  // Challenge if too permissive on self-defense
+            challengeText: 'The prospective juror has a very broad view of self-defense justification. This could improperly favor the defendant. Challenge for cause.',
+            defenseOptions: [
+                'I can evaluate self-defense claims based on the law, not my personal beliefs.',
+                'I understand that self-defense must meet specific legal criteria.',
+                'I misspoke—I can fairly judge self-defense within the law.'
+            ],
+            winningDefenses: [0, 1, 2]
         },
         {
             q: 'Do you trust forensic evidence and DNA testing?',
             context: 'This case relies on forensic analysis.',
-            options: ['I trust it strongly', 'I generally trust it', 'I\'m skeptical', 'I don\'t trust it']
+            options: ['I trust it strongly', 'I generally trust it', 'I\'m skeptical', 'I don\'t trust it'],
+            challengeable: true,
+            challengeAnswers: [2, 3],  // Challenge if skeptical of forensics
+            challengeText: 'The prospective juror is skeptical of forensic evidence. This case depends on DNA and forensic analysis. We request dismissal.',
+            defenseOptions: [
+                'I can evaluate forensic evidence fairly like any other evidence.',
+                'I respect forensic science when it\'s presented by qualified experts.',
+                'Skepticism is healthy, but I can trust sound forensic methodology.'
+            ],
+            winningDefenses: [0, 1, 2]
         },
         {
             q: 'How do you feel about defendants who claim innocence?',
             context: 'This defendant maintains innocence.',
-            options: ['Naturally skeptical', 'I listen with open mind', 'I believe the claim', 'No clear position']
+            options: ['Naturally skeptical', 'I listen with open mind', 'I believe the claim', 'No clear position'],
+            challengeable: true,
+            challengeAnswers: [2],  // Challenge if too credulous
+            challengeText: 'The prospective juror indicates they would believe innocence claims. This prejudges the evidence. Challenge for cause.',
+            defenseOptions: [
+                'I misspoke. I\'ll judge based on evidence, not the defendant\'s claims.',
+                'I listen with an open mind but require proof either way.',
+                'I understand the presumption of innocence but won\'t presume facts.'
+            ],
+            winningDefenses: [0, 1, 2]
         }
     ],
     'SCANDAL': [
         {
             q: 'Do you believe politicians are inherently corrupt?',
             context: 'This case involves a political figure.',
-            options: ['Yes, most are', 'Many are', 'Some are', 'No, most are ethical']
+            options: ['Yes, most are', 'Many are', 'Some are', 'No, most are ethical'],
+            challengeable: true,
+            challengeAnswers: [0, 1],
+            challengeText: 'The prospective juror holds a strong prejudice against politicians. They\'ve already presumed guilt. Challenge for cause.',
+            defenseOptions: [
+                'I can judge this defendant fairly regardless of my general views on politicians.',
+                'I can set aside my cynicism and focus on this specific person and evidence.',
+                'Just because I\'m skeptical of politics doesn\'t mean I\'ll prejudge this case.'
+            ],
+            winningDefenses: [0, 1, 2]
         },
         {
             q: 'Can you judge a defendant fairly regardless of their political beliefs?',
             context: 'This case has political dimensions.',
-            options: ['Yes, completely fair', 'Yes, mostly fair', 'I\'ll try', 'This is difficult for me']
+            options: ['Yes, completely fair', 'Yes, mostly fair', 'I\'ll try', 'This is difficult for me'],
+            challengeable: true,
+            challengeAnswers: [2, 3],
+            challengeText: 'The prospective juror expresses uncertainty about judging fairly based on political beliefs. This bias will affect their verdict. Challenge for cause.',
+            defenseOptions: [
+                'I can judge this defendant fairly. Politics is irrelevant to guilt or innocence.',
+                'I understand the importance of setting aside political differences in court.',
+                'I will judge this case solely on evidence, not on politics.'
+            ],
+            winningDefenses: [0, 1, 2]
         },
         {
             q: 'Have you been affected by corruption or misconduct?',
             context: 'This may bias your judgment.',
-            options: ['Yes, personally', 'Yes, indirectly', 'No direct experience', 'Prefer not to answer']
+            options: ['Yes, personally', 'Yes, indirectly', 'No direct experience', 'Prefer not to answer'],
+            challengeable: true,
+            challengeAnswers: [0, 1],
+            challengeText: 'The prospective juror has been harmed by corruption. This personal grievance may bias them against the defendant. Challenge for cause.',
+            defenseOptions: [
+                'My experience makes me fair—I understand how corruption harms people.',
+                'I can judge this case objectively despite my past experiences.',
+                'I won\'t let my history with corruption affect this specific defendant.'
+            ],
+            winningDefenses: [1, 2]
         },
         {
             q: 'Do you believe the wealthy/connected get special treatment?',
             context: 'Does this affect your judgment of this powerful defendant?',
-            options: ['Yes, definitely', 'Probably', 'Maybe', 'I don\'t think so']
+            options: ['Yes, definitely', 'Probably', 'Maybe', 'I don\'t think so'],
+            challengeable: true,
+            challengeAnswers: [0],
+            challengeText: 'The prospective juror believes the defendant already has unfair advantage due to wealth. They\'ve prejudged the case. Challenge for cause.',
+            defenseOptions: [
+                'In this courtroom, everyone is equal before the law—including this defendant.',
+                'I can judge fairly. My views on wealth don\'t affect this specific case.',
+                'The jury process ensures fairness regardless of someone\'s wealth or connections.'
+            ],
+            winningDefenses: [0, 1, 2]
         }
     ]
 };
@@ -2175,13 +2514,141 @@ function submitVoirDireAnswer() {
     const selected = document.querySelector('[name="voir-dire"]:checked');
     if (!selected) return;
 
-    gameState.playerVoiceVerdictAnswers[gameState.voirDireIndex] = selected.value;
+    const questions = voirDireQuestions[gameState.currentCase.type];
+    const currentQuestion = questions[gameState.voirDireIndex];
+    const selectedAnswerIndex = parseInt(selected.value);
+
+    gameState.playerVoiceVerdictAnswers[gameState.voirDireIndex] = selectedAnswerIndex;
+
+    // Check if this answer triggers an attorney challenge
+    if (currentQuestion.challengeable && currentQuestion.challengeAnswers.includes(selectedAnswerIndex)) {
+        // Store challenge info for the challenge screen
+        gameState.currentChallenge = {
+            questionIndex: gameState.voirDireIndex,
+            question: currentQuestion,
+            selectedAnswer: selectedAnswerIndex
+        };
+        showAttorneyChallenge();
+        return;
+    }
+
+    // No challenge - proceed to next question or trial
     gameState.voirDireIndex++;
 
-    if (gameState.voirDireIndex >= voirDireQuestions[gameState.currentCase.type].length) {
+    if (gameState.voirDireIndex >= questions.length) {
         proceedToTrial();
     } else {
         showVoirDireQuestion();
+    }
+}
+
+// ==================== ATTORNEY CHALLENGES ====================
+function showAttorneyChallenge() {
+    const challenge = gameState.currentChallenge;
+    const question = challenge.question;
+
+    // Determine which attorney challenges (prosecutor or defense alternates)
+    const attorney = gameState.voirDireIndex % 2 === 0 ? 'Prosecution' : 'Defense';
+
+    document.getElementById('challenge-attorney-name').textContent = attorney + ' Attorney';
+    document.getElementById('challenge-text').textContent = question.challengeText;
+
+    // Display defense options as radio buttons
+    const responsesHtml = question.defenseOptions.map((option, idx) => `
+        <div class="option-card">
+            <input type="radio" name="challenge-response" value="${idx}" id="cr-${idx}">
+            <label for="cr-${idx}" style="cursor: pointer; display: block;">${option}</label>
+        </div>
+    `).join('');
+
+    document.getElementById('challenge-responses').innerHTML = responsesHtml;
+    showScreen('attorney-challenge-screen');
+}
+
+function submitChallengeDefense() {
+    const selected = document.querySelector('[name="challenge-response"]:checked');
+    if (!selected) return;
+
+    const challenge = gameState.currentChallenge;
+    const selectedResponseIndex = parseInt(selected.value);
+    const winningResponses = challenge.question.winningDefenses || [];
+
+    // Determine if challenge is sustained or denied
+    const challengeSustained = !winningResponses.includes(selectedResponseIndex);
+
+    // Show outcome
+    showChallengeOutcome(challengeSustained, selectedResponseIndex);
+}
+
+function showChallengeOutcome(sustained, responseIndex) {
+    const challenge = gameState.currentChallenge;
+    const question = challenge.question;
+    const response = question.defenseOptions[responseIndex];
+
+    let titleText, contentHtml;
+
+    if (sustained) {
+        titleText = '❌ CHALLENGE SUSTAINED - YOU ARE EXCUSED';
+        contentHtml = `
+            <div class="warning-box" style="background: #ffe6e6; border-color: #e74c3c;">
+                <strong style="color: #c0392b;">Your Response:</strong> "${response}"
+            </div>
+            <p class="text" style="margin-top: 20px;">
+                The judge has ruled the attorney's challenge valid. Your answer revealed bias that could affect your judgment in this case. You are excused from jury duty.
+            </p>
+            <p class="text" style="color: #e74c3c; font-weight: 600;">
+                You have been disqualified from this jury.
+            </p>
+        `;
+    } else {
+        titleText = '✓ CHALLENGE DENIED - YOU REMAIN ON JURY';
+        contentHtml = `
+            <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 4px; padding: 16px; margin-bottom: 20px;">
+                <strong style="color: #155724;">Your Response:</strong> "${response}"
+            </div>
+            <p class="text" style="margin-top: 20px;">
+                The judge has ruled that your response adequately addressed the concern. The attorney's challenge is denied, and you remain on the jury.
+            </p>
+            <p class="text" style="color: #27ae60; font-weight: 600;">
+                You have survived the challenge and may proceed with jury selection.
+            </p>
+        `;
+    }
+
+    document.getElementById('challenge-outcome-title').textContent = titleText;
+    document.getElementById('challenge-outcome-content').innerHTML = contentHtml;
+    gameState.challengeSustained = sustained;
+    showScreen('challenge-outcome-screen');
+}
+
+function proceedAfterChallenge() {
+    if (gameState.challengeSustained) {
+        // Player is disqualified - show alternate jury duty consequence
+        gameState.declineCount++;
+        sessionStorage.setItem('declineCount', gameState.declineCount);
+
+        const content = document.getElementById('decline-content');
+        document.getElementById('decline-title').textContent = '⚖️ DISQUALIFIED FROM JURY';
+        content.innerHTML = `
+            <div class="warning-box">
+                <strong>You have been disqualified from jury duty for cause.</strong> Your bias was detected during jury selection, and you cannot fairly judge this case.
+            </div>
+            <p class="text">• You must wait before being called for future jury duty</p>
+            <p class="text">• This disqualification counts as attempting to evade jury service</p>
+            <p class="text">• This is your attempt #${gameState.declineCount} of 3</p>
+            ${gameState.declineCount >= 2 ? '<p class="text" style="color: #e74c3c;"><strong>One more disqualification will result in contempt trial.</strong></p>' : ''}
+        `;
+        showScreen('decline-screen');
+    } else {
+        // Challenge denied - continue voir dire
+        gameState.voirDireIndex++;
+        const questions = voirDireQuestions[gameState.currentCase.type];
+
+        if (gameState.voirDireIndex >= questions.length) {
+            proceedToTrial();
+        } else {
+            showVoirDireQuestion();
+        }
     }
 }
 
@@ -2345,11 +2812,67 @@ function nextEvidence() {
     const c = gameState.currentCase;
 
     if (gameState.currentEvidenceIndex >= c.evidence.length) {
-        // Move to closing statements
-        advanceTrial();
+        // All evidence shown - process any remaining cross-exams
+        processAllCrossExaminations();
     } else {
         displayCurrentEvidence();
     }
+}
+
+function processAllCrossExaminations() {
+    const c = gameState.currentCase;
+    if (!c.crossExaminations) {
+        advanceTrial();
+        return;
+    }
+
+    gameState.crossExamIndex = gameState.crossExamIndex || 0;
+
+    // Process each cross-exam
+    while (gameState.crossExamIndex < c.crossExaminations.length) {
+        const crossExam = c.crossExaminations[gameState.crossExamIndex];
+        gameState.crossExamIndex++;
+
+        // Apply NPC conviction shift silently
+        applyNPCConvictionShift(crossExam.npcConvictionShift);
+
+        // Show impactful cross-exams to player
+        if (crossExam.impact) {
+            showCrossExamination(crossExam);
+            return;  // Stop and show screen, will continue on click
+        }
+    }
+
+    // All cross-exams processed, move to closing
+    advanceTrial();
+}
+
+function showCrossExamination(crossExam) {
+    document.getElementById('cross-exam-witness-label').textContent = crossExam.witness;
+    document.getElementById('cross-exam-attorney').textContent = crossExam.attorney + ' Attorney';
+    document.getElementById('cross-exam-text').textContent = crossExam.question;
+
+    const impactNote = crossExam.npcConvictionShift > 0
+        ? 'This strengthens the prosecution\'s case'
+        : 'This raises reasonable doubt';
+    document.getElementById('cross-exam-impact-note').textContent = impactNote;
+
+    showScreen('trial-cross-exam-screen');
+}
+
+function continueFromCrossExam() {
+    processAllCrossExaminations();
+}
+
+function applyNPCConvictionShift(shift) {
+    if (!shift) return;
+
+    gameState.npcConvictions.forEach(npc => {
+        if (npc.id !== 7) {  // Don't affect player
+            npc.conviction += shift;
+            npc.conviction = Math.max(0, Math.min(100, npc.conviction));  // Clamp 0-100
+        }
+    });
 }
 
 function proceedToDeliberation() {
@@ -2383,22 +2906,45 @@ function renderDeliberationRound() {
 
 function renderRound1() {
     const discussionDiv = document.getElementById('npc-discussion');
-    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">INITIAL VOTING</div><div class="text">Lead Juror Turner: "Let\'s begin. Juror 1, what\'s your verdict?"</div></div>';
+    discussionDiv.innerHTML = '<div class="deliberation-panel"><div class="subtitle">🗳️ ROUND 1 - INITIAL VOTING</div><div class="text"><strong>Lead Juror Turner:</strong> "Let\'s begin. Juror 1, what\'s your verdict?"</div></div>';
 
     const jury = gameState.npcConvictions.filter(j => j.id !== 7);
-    jury.forEach((npc, idx) => {
-        if (idx < 6) {
-            const vote = npc.conviction > 50 ? 'GUILTY' : 'NOT GUILTY';
-            npc.vote = vote;
-            const arg = npc.conviction > 50 ? npc.arguments.guilty[0] : npc.arguments.notGuilty[0];
-            discussionDiv.innerHTML += `
-                <div class="npc-statement">
-                    <div class="npc-name">Juror ${npc.id}: ${npc.name}</div>
-                    <div class="npc-statement-text">"${arg}"</div>
-                </div>
-            `;
-        }
+    const fullJury = gameState.npcConvictions;
+
+    // Round 1: First 6 jurors vote
+    jury.slice(0, 6).forEach((npc, idx) => {
+        const vote = npc.conviction > 50 ? 'GUILTY' : 'NOT GUILTY';
+        npc.vote = vote;
+        npc.roundHistory.push({ round: 1, vote: vote, conviction: npc.conviction });
+
+        // Select argument dynamically based on personality and conviction
+        const argument = selectArgumentForNPC(npc, 1, jury);
+        npc.argumentsSpoken.push(argument);
+
+        // Apply minimal persuasion in round 1 (jurors are just stating positions)
+        const argType = determineArgumentType(argument, npc.personality);
+        applyArgumentPersuasion(npc, argument, fullJury);
+
+        discussionDiv.innerHTML += `
+            <div class="npc-statement">
+                <div class="npc-name">Juror ${npc.id}: ${npc.name} (${npc.personality})</div>
+                <div class="npc-statement-text">"${argument}"</div>
+            </div>
+        `;
     });
+
+    // Calculate tally after first 6 vote
+    const firstVoteTally = jury.slice(0, 6).reduce((acc, npc) => {
+        if (npc.vote === 'GUILTY') acc.guilty++;
+        else acc.notGuilty++;
+        return acc;
+    }, { guilty: 0, notGuilty: 0 });
+
+    discussionDiv.innerHTML += `
+        <div class="tally-display" style="margin: 20px 0; padding: 12px; background: #ecf0f1; border-radius: 4px;">
+            <strong>Lead Juror Turner:</strong> "That's ${firstVoteTally.guilty} guilty, ${firstVoteTally.notGuilty} not guilty, ${12 - 6 - firstVoteTally.guilty - firstVoteTally.notGuilty} remaining."
+        </div>
+    `;
 
     document.getElementById('player-voting-section').style.display = 'block';
     document.getElementById('discussion-phase').style.display = 'none';
