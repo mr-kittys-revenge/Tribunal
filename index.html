@@ -1308,6 +1308,29 @@ const gameState = {
 };
 
 // ==================== CASE DATA ====================
+// EVIDENCE TEMPLATE (use for all cases):
+// evidence: [
+//     {
+//         name: 'Evidence Name',
+//         presented: 'Prosecution' | 'Defense',
+//         description: 'One sentence summary',
+//         details: 'Detailed explanation of what this evidence shows, specific numbers, quotes, timelines',
+//         keyPoint: 'The crucial takeaway jurors should understand',
+//         witness: 'Who presented this evidence'
+//     }
+// ]
+//
+// CROSS-EXAMINATION TEMPLATE:
+// crossExaminations: [
+//     {
+//         witness: 'Name of witness being questioned',
+//         attorney: 'Prosecution' | 'Defense',
+//         question: 'Full question/challenge posed',
+//         response: 'Witness\'s actual response - how they answer',
+//         impact: true | false,  // Show to player if true
+//         npcConvictionShift: number  // -30 to +30, affects jury NPCs
+//     }
+// ]
 const casesData = [
     // WHITE COLLAR - EMBEZZLEMENT
     {
@@ -1322,32 +1345,63 @@ const casesData = [
         prosecutionSummary: 'Robert Chen, CFO of TechCorp Industries, systematically embezzled company funds through fake invoices and shell companies. Evidence includes falsified bank records, email chains showing knowledge, and witness testimony from accounting staff.',
         defenseSummary: 'The defense argues the accounting practices at TechCorp were murky and unclear. The defendant claims these transfers were authorized reimbursements, not theft. Expert testimony questions whether intent can be proven.',
         evidence: [
-            { name: 'Bank Records', description: 'Wire transfers to shell companies over 3-year period' },
-            { name: 'Email Chain', description: 'Emails showing defendant knew about scheme' },
-            { name: 'Witness Testimony', description: 'CFO\'s assistant confirms falsified invoices' },
-            { name: 'Financial Report', description: 'Audit shows $2.3M discrepancies' }
+            {
+                name: 'Bank Records & Shell Company Documents',
+                presented: 'Prosecution',
+                description: 'Between January 2021 and March 2024, wire transfers totaling $2.3 million were sent from TechCorp accounts to three shell companies: "Chen Holdings LLC," "Pacific Capital Investments," and "Global Tech Services Inc."',
+                details: 'The prosecution presented bank statements showing the accounts belonged to registered shell companies with the defendant Robert Chen listed as the sole owner and beneficiary. No legitimate business purpose for these shell companies could be established.',
+                keyPoint: 'All three shell companies were created by the defendant, with signatures on the incorporation documents matching his handwriting.',
+                witness: 'Prosecution Financial Expert - Jennifer Wu'
+            },
+            {
+                name: 'Email Communications',
+                presented: 'Prosecution',
+                description: 'Email chains between defendant and TechCorp accounting staff from 2021-2024 discussing the wire transfers and falsified invoice approvals.',
+                details: 'Email dated March 15, 2022: Defendant emails accountant "Make sure these invoice amounts match what we discussed. Check with me before posting." Email from May 2023: Accountant replies "The shell company invoices are ready to process - looks legitimate in the system."',
+                keyPoint: 'Multiple emails show the defendant providing specific instructions on how to create and process false invoices, demonstrating knowledge and intent.',
+                witness: 'Prosecution IT Expert - Marcus Thompson'
+            },
+            {
+                name: 'Witness Testimony: CFO\'s Assistant',
+                presented: 'Prosecution',
+                description: 'Sarah Martinez, the CFO\'s assistant for 8 years, testified about her direct knowledge of the scheme and the defendant\'s involvement.',
+                details: 'Ms. Martinez stated: "Mr. Chen would directly instruct me on which invoices to flag for payment to the shell companies. He would say things like \'Sarah, process this one quietly.\' When I expressed concern about the legitimacy, he said it was authorized by the board, but I never saw any board authorization."',
+                keyPoint: 'Ms. Martinez provided detailed testimony about the defendant\'s direct involvement and instructions to process fraudulent invoices.',
+                witness: 'Witness - Sarah Martinez (Prosecution)'
+            },
+            {
+                name: 'Forensic Audit Report',
+                presented: 'Prosecution',
+                description: 'An independent forensic audit commissioned after the discovery identified discrepancies and traced the money flow to shell company accounts.',
+                details: 'The audit confirmed that $2.3 million was missing from TechCorp accounts, and all of it traced to three shell companies. The report shows that the defendant had exclusive access to approve these transfers, and no other employee had the authorization level to initiate them.',
+                keyPoint: 'The audit confirmed that only the CFO (defendant) had the authority and access to create and approve transfers to shell company accounts.',
+                witness: 'Expert Witness - Dr. Patricia Lee (Auditor)'
+            }
         ],
         crossExaminations: [
             {
-                witness: 'CFO\'s Assistant',
+                witness: 'Sarah Martinez',
                 attorney: 'Defense',
-                question: 'Isn\'t it true that you made several accounting errors yourself during this period? And couldn\'t some of these transfers have been legitimate reimbursements you misrecorded?',
-                impact: true,  // Swings verdict - could create reasonable doubt about witness reliability
-                npcConvictionShift: -15  // Reduces conviction likelihood for NPCs
+                question: 'Ms. Martinez, isn\'t it true that you made several accounting errors yourself during this period? And couldn\'t some of these transfers have been legitimate reimbursements that were simply misrecorded or mislabeled in the system?',
+                response: 'Well... I did make some errors. But no, these transfers were different. Mr. Chen specifically told me to send them to those specific shell company accounts. He never said they were reimbursements. The pattern was consistent - it was always the same accounts, the same amounts.',
+                impact: true,
+                npcConvictionShift: -10  // Some doubt created about witness accuracy, but testimony mostly holds
             },
             {
-                witness: 'Financial Auditor',
-                attorney: 'Prosecution',
-                question: 'The shell companies had no legitimate business purpose, correct? And the only person with access to create these shell companies was the defendant?',
-                impact: false,  // Minor - reinforces existing evidence
-                npcConvictionShift: 0
+                witness: 'Dr. Patricia Lee',
+                attorney: 'Defense',
+                question: 'Dr. Lee, in your audit experience, isn\'t it possible that a CFO might have legitimate reasons to use shell companies for business purposes - perhaps for strategic investments or privacy reasons?',
+                response: 'In my 25 years of auditing, I\'ve never seen legitimate shell companies that have: one, no stated business purpose; two, no employees or operations; three, accounts that only receive money from one source and then immediately distribute it. These characteristics indicate the shell companies were created solely for moving money out of the legitimate business.',
+                impact: true,
+                npcConvictionShift: 15  // Reinforces prosecution case despite defense attempt
             },
             {
-                witness: 'Defendant Robert Chen',
+                witness: 'Robert Chen (Defendant)',
                 attorney: 'Prosecution',
-                question: 'You claim these were authorized transfers. Where is the authorization? Who authorized them?',
-                impact: true,  // Swings verdict - defendant cannot produce authorization, creates guilty impression
-                npcConvictionShift: 25  // Increases conviction likelihood
+                question: 'Mr. Chen, you claim these were authorized transfers. Can you produce any board authorization, email, or documentation showing you had permission to transfer $2.3 million to shell companies you created?',
+                response: '... I... those were... the accounting department handled a lot of that. I don\'t recall specific approvals. The transfers may have been authorized at some point, but I can\'t produce the documentation right now.',
+                impact: true,
+                npcConvictionShift: 25  // Defendant\'s inability to produce authorization is damaging
             }
         ],
         realCaseBasis: 'Inspired by Enron-style embezzlement cases',
@@ -1366,25 +1420,63 @@ const casesData = [
         prosecutionSummary: 'David Martinez, an investment banker, traded stock before public acquisition announcement. Prosecutors show phone records and trading patterns prove he used insider information for profit. Gained $2.1M in days.',
         defenseSummary: 'The defense argues the trading was coincidental. The defendant claims he researched the company independently and made a lucky trade. Expert witnesses question if circumstantial evidence proves intent.',
         evidence: [
-            { name: 'Phone Records', description: 'Calls between defendant and board member before announcement' },
-            { name: 'Trading Records', description: 'Unusual stock purchases days before public announcement' },
-            { name: 'Text Messages', description: 'Cryptic messages about "big deal coming"' },
-            { name: 'Expert Testimony', description: 'Statistical improbability of coincidence' }
+            {
+                name: 'Phone Records & Call Logs',
+                presented: 'Prosecution',
+                description: 'Cellular phone records showing six calls between defendant David Martinez and Robert Thompson, chairman of Meridian Biotech, over a 48-hour period ending at 3:47 PM on March 14, 2024.',
+                details: 'Call logs show: March 13 at 2:15 PM (28 min call), March 14 at 9:00 AM (15 min call), March 14 at 11:30 AM (42 min call), March 14 at 1:45 PM (31 min call). The final call occurred 3 hours before a press release announced Meridian Biotech\'s acquisition by Genentech at a premium price.',
+                keyPoint: 'Defendant was in direct communication with the board chairman hours before the public announcement of the acquisition - acquisition was not publicly known at the time of these calls.',
+                witness: 'Prosecution Telecommunications Expert - James Park'
+            },
+            {
+                name: 'Brokerage Trading Records',
+                presented: 'Prosecution',
+                description: 'Detailed trading activity from defendant\'s investment account at Goldman Sachs showing purchase of 50,000 shares of Meridian Biotech stock on March 14, 2024 at $34.12 per share.',
+                details: 'Prosecution shows: Defendant had NO prior history of trading Meridian Biotech stock. Purchase occurred at 4:32 PM on March 14 - just 45 minutes after final call with board chairman. The next day, March 15, stock price jumped to $67.89 per share when acquisition was announced publicly. Defendant\'s profit: $1.68 million in less than 24 hours.',
+                keyPoint: 'Defendant acquired a massive position in Meridian stock at a deeply discounted price, just hours before public announcement. The timing and magnitude of profit suggest he knew about the acquisition before it was public.',
+                witness: 'Expert Witness - Catherine Wu (Financial Analyst)'
+            },
+            {
+                name: 'Text Message Records',
+                presented: 'Prosecution',
+                description: 'Text messages between defendant Martinez and his associate Joel Chen discussing the acquisition opportunity using coded language.',
+                details: 'Text from March 13 at 5:42 PM: "The big pharma deal might happen. This could be huge. Keep your eyes open." Reply from Chen: "How sure are you?" Martinez: "Talking to the guy right now. Might be ready to move tomorrow." Chen: "This is insane. How much are you buying?" Martinez: "Everything I can. This is a lock."',
+                keyPoint: 'Defendant discussed the acquisition with associates in advance as a "lock" - indicating he had advance knowledge that made him certain of the outcome.',
+                witness: 'Prosecution Digital Forensics - Sarah Mitchell'
+            },
+            {
+                name: 'Expert Statistical Analysis',
+                presented: 'Prosecution',
+                description: 'Statistical expert testimony on the probability of the observed trading pattern occurring by pure coincidence.',
+                details: 'Expert calculated: There are 5,000+ publicly traded stocks. The probability that a professional trader would independently decide to invest in a specific stock on the same day they receive a call from that company\'s chairman, resulting in a $1.68 million profit the next day when a surprise acquisition is announced, is less than 1 in 50,000. In statistical terms, this pattern is deemed "virtually impossible to occur by chance."',
+                keyPoint: 'The confluence of events (calls to chairman, stock purchase same day, announcement next day, massive profit) statistically indicates advance knowledge rather than independent research.',
+                witness: 'Expert Witness - Dr. Robert Hoffman (Statistics Professor)'
+            }
         ],
         crossExaminations: [
             {
-                witness: 'Prosecution Expert',
+                witness: 'James Park',
                 attorney: 'Defense',
-                question: 'Isn\'t it true that many professional traders make similar trades based on public information and patterns? Couldn\'t the defendant have simply done the same research?',
-                impact: true,  // Creates reasonable doubt
-                npcConvictionShift: -20
+                question: 'Mr. Park, investment bankers and traders often communicate with corporate executives about various matters. Isn\'t it common for calls to occur between traders and board members, particularly in March when quarterly earnings discussions happen?',
+                response: 'That\'s true, board members do communicate with traders. However, the frequency and duration of these calls - six calls in 48 hours, with the longest at 42 minutes - is unusual. Most business calls are brief. And the proximity to the acquisition announcement... that specific pattern is less common.',
+                impact: true,
+                npcConvictionShift: -8  // Slight doubt about whether calls are inherently suspicious
             },
             {
-                witness: 'Defendant David Martinez',
+                witness: 'Catherine Wu',
+                attorney: 'Defense',
+                question: 'Ms. Wu, isn\'t it true that many investors make large stock purchases and sometimes get lucky? Couldn\'t the defendant have simply been bullish on Meridian based on their drug pipeline research you can read on any financial website?',
+                response: 'The timing is what\'s suspicious. Yes, investors make lucky trades. But this wasn\'t just lucky - he put 50,000 shares on one day, and it was immediately followed by an acquisition announcement. The real question is: why this stock, on this particular day? Meridian wasn\'t in the news. There was no public reason to buy.',
+                impact: true,
+                npcConvictionShift: 18  // Reinforces prosecution case
+            },
+            {
+                witness: 'David Martinez (Defendant)',
                 attorney: 'Prosecution',
-                question: 'You claim you researched the company independently. Yet you made this trade just days after calling a board member. That\'s quite a coincidence, isn\'t it?',
-                impact: true,  // Highlights suspicious timing
-                npcConvictionShift: 30
+                question: 'You say you researched Meridian Biotech independently. Can you walk us through this research? What public articles, financial reports, or analyses led you to invest $1.7 million in a stock you\'d never purchased before, on this specific day?',
+                response: 'I... well, I was following their Phase 3 trial results that came out. I thought it was a good opportunity. I was doing my own analysis of their fundamentals. I called Rob Thompson because... because I wanted to get some perspective from someone in the industry, and I know him from years back.',
+                impact: true,
+                npcConvictionShift: 28  // Defendant\'s vague explanation damages credibility
             }
         ],
         realCaseBasis: 'Similar to Martha Stewart insider trading case',
@@ -1403,10 +1495,40 @@ const casesData = [
         prosecutionSummary: 'Patricia Kowalski, owner of a dental practice, hid $500K in annual income in offshore Cayman Islands accounts. Prosecutors prove unreported income through bank records and financial forensics.',
         defenseSummary: 'The defense claims the offshore accounts were for legitimate business investments. Defendant argues she misunderstood tax reporting requirements and intended to report the income.',
         evidence: [
-            { name: 'Bank Records', description: 'Transfers to Cayman Islands accounts' },
-            { name: 'IRS Documents', description: 'Discrepancies between reported and actual income' },
-            { name: 'Financial Records', description: 'Business accounts show much higher income' },
-            { name: 'Expert Testimony', description: 'Accountant explains the unreported amounts' }
+            {
+                name: 'Business Financial Records',
+                presented: 'Prosecution',
+                description: 'Official tax returns for Kowalski Dental Associates showing reported gross income versus actual deposits into business accounts.',
+                details: 'Tax returns filed 2019-2023 showed average annual income of $180,000. However, business bank statements show average annual deposits of $680,000. The discrepancy totals approximately $500,000 per year in unreported income.',
+                keyPoint: 'The defendant reported only 26% of the actual business income to the IRS - a deliberate and substantial underreporting.',
+                witness: 'Prosecution Accountant - Michael Torres'
+            },
+            {
+                name: 'Offshore Bank Records',
+                presented: 'Prosecution',
+                description: 'Court-ordered disclosure from Cayman Islands banking authority showing accounts under the name "P. Kowalski Holdings Limited."',
+                details: 'Account records show transfers from Kowalski Dental Associates business account totaling $2.3 million over 5 years to offshore accounts. These transfers perfectly match the timing of the unreported income gaps identified in the business records.',
+                keyPoint: 'The defendant systematically transferred unreported business income to offshore accounts outside US tax jurisdiction - a classic tax evasion signature.',
+                witness: 'Prosecution Financial Forensics Expert - Dr. Lisa Chen'
+            },
+            {
+                name: 'IRS Discrepancy Report',
+                presented: 'Prosecution',
+                description: 'IRS audit findings showing the specific discrepancies between the defendant\'s tax filings and reported income.',
+                details: 'During a routine audit of dental practice tax returns, IRS identified that income reported on personal returns ($180K/year) did not match bank deposits ($680K/year). The IRS investigation traced the missing funds to offshore accounts created in 2019 - the same year defendant hired a "tax optimization consultant."',
+                keyPoint: 'The defendant\'s actions show pattern and knowledge - creation of offshore accounts coincided exactly with the start of underreporting on tax returns.',
+                witness: 'IRS Special Agent - Thomas Rodriguez'
+            }
+        ],
+        crossExaminations: [
+            {
+                witness: 'Patricia Kowalski (Defendant)',
+                attorney: 'Prosecution',
+                question: 'Dr. Kowalski, you claim you misunderstood your tax obligations. Yet you hired a consultant in 2019 who specifically discussed "tax optimization." Didn\'t that consultant explain your reporting requirements?',
+                response: 'He mentioned... tax planning strategies. I thought what I was doing was legal tax planning, not evasion. I made mistakes in my understanding.',
+                impact: true,
+                npcConvictionShift: 22  // Defendant's vague explanation weakens credibility
+            }
         ],
         realCaseBasis: 'Based on common tax evasion cases',
         actualVerdict: '90% conviction rate for proven tax evasion with bank evidence',
@@ -2795,14 +2917,25 @@ function displayCurrentEvidence() {
 
     // Reset timer
     if (gameState.evidenceTimer) clearInterval(gameState.evidenceTimer);
-    gameState.timeRemaining = 30;
+    gameState.timeRemaining = 45;
     gameState.canSkip = false;
 
-    // Display evidence
+    // Display evidence with full details
     const evidenceHtml = `
         <div class="evidence-item">
-            <div class="evidence-title">📋 ${evidence.name}</div>
-            <div class="evidence-description">${evidence.description}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div class="evidence-title">📋 ${evidence.name}</div>
+                <span style="background: ${evidence.presented === 'Prosecution' ? '#e74c3c' : '#27ae60'}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${evidence.presented}</span>
+            </div>
+            <div class="evidence-description" style="margin-bottom: 12px;"><strong>${evidence.description}</strong></div>
+            <div style="background: #ecf0f1; padding: 12px; border-radius: 4px; margin-bottom: 12px; line-height: 1.6;">
+                <div style="font-size: 13px;">${evidence.details}</div>
+            </div>
+            <div style="background: #fff3cd; border-left: 4px solid #f39c12; padding: 12px; margin-bottom: 12px; border-radius: 4px;">
+                <div style="font-size: 12px; color: #666;">🔑 KEY POINT</div>
+                <div style="font-weight: 600; margin-top: 4px;">${evidence.keyPoint}</div>
+            </div>
+            <div style="font-size: 12px; color: #666; font-style: italic;">Presented by: ${evidence.witness}</div>
         </div>
     `;
     document.getElementById('current-evidence-item').innerHTML = evidenceHtml;
@@ -2822,11 +2955,11 @@ function startEvidenceTimer() {
         document.getElementById('timer-seconds').textContent = gameState.timeRemaining;
 
         // Update timer bar
-        const percentage = (gameState.timeRemaining / 30) * 100;
+        const percentage = (gameState.timeRemaining / 45) * 100;
         document.getElementById('timer-fill').style.width = percentage + '%';
 
-        // Allow skip after 15 seconds
-        if (gameState.timeRemaining === 15 && !gameState.canSkip) {
+        // Allow skip after 20 seconds
+        if (gameState.timeRemaining === 20 && !gameState.canSkip) {
             gameState.canSkip = true;
             document.getElementById('skip-evidence-btn').style.display = 'block';
         }
@@ -2885,13 +3018,28 @@ function processAllCrossExaminations() {
 }
 
 function showCrossExamination(crossExam) {
-    document.getElementById('cross-exam-witness-label').textContent = crossExam.witness;
-    document.getElementById('cross-exam-attorney').textContent = crossExam.attorney + ' Attorney';
-    document.getElementById('cross-exam-text').textContent = crossExam.question;
+    // Show witness response to attorney question
+    document.getElementById('cross-exam-witness-label').textContent = crossExam.witness + ' (On Stand)';
+    const responseText = crossExam.response || '[Witness responds to the question]';
+    document.getElementById('cross-exam-witness-response').innerHTML = `<em>"${responseText}"</em>`;
 
-    const impactNote = crossExam.npcConvictionShift > 0
-        ? 'This strengthens the prosecution\'s case'
-        : 'This raises reasonable doubt';
+    // Show attorney question
+    document.getElementById('cross-exam-attorney').textContent = crossExam.attorney + ' Attorney';
+    document.getElementById('cross-exam-text').textContent = `"${crossExam.question}"`;
+
+    // Show impact assessment
+    let impactNote = '';
+    if (crossExam.npcConvictionShift > 15) {
+        impactNote = '⚖️ This significantly strengthens the case against the defendant';
+    } else if (crossExam.npcConvictionShift > 0) {
+        impactNote = '✓ This supports the prosecution\'s theory';
+    } else if (crossExam.npcConvictionShift < -10) {
+        impactNote = '⚖️ This significantly undermines the prosecution\'s case';
+    } else if (crossExam.npcConvictionShift < 0) {
+        impactNote = '? This raises questions about the witness credibility';
+    } else {
+        impactNote = '— This reinforces points already made';
+    }
     document.getElementById('cross-exam-impact-note').textContent = impactNote;
 
     showScreen('trial-cross-exam-screen');
