@@ -416,37 +416,380 @@
             font-weight: 600;
             transition: width 0.3s;
         }
+
+        .summons-container {
+            background: white;
+            border: 3px solid #2c3e50;
+            border-radius: 0;
+            padding: 40px;
+            max-width: 700px;
+            margin: 20px auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-family: 'Georgia', serif;
+        }
+
+        .summons-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+
+        .court-seal {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .court-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            color: #2c3e50;
+        }
+
+        .summons-date {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .summons-body {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #1a1a1a;
+        }
+
+        .summons-body p {
+            margin: 16px 0;
+        }
+
+        .summons-details {
+            background: #f9f9f9;
+            border-left: 4px solid #2c3e50;
+            padding: 16px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .summons-details-item {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .summons-warning {
+            background: #ffe6e6;
+            border: 2px solid #e74c3c;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+            color: #c0392b;
+        }
+
+        .summons-signature {
+            margin-top: 30px;
+            text-align: right;
+            font-family: 'Georgia', serif;
+        }
+
+        .signature-line {
+            border-top: 1px solid #333;
+            width: 150px;
+            height: 40px;
+        }
+
+        .signature-title {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .day-flavor-text {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 14px;
+            font-style: italic;
+            color: #2c3e50;
+            border-radius: 4px;
+        }
+
+        .time-limit-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 8px 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes reveal {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(44, 62, 80, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(44, 62, 80, 0);
+            }
+        }
+
+        .case-reveal-container {
+            animation: slideIn 0.6s ease-in-out;
+        }
+
+        .case-card {
+            background: white;
+            border: 3px solid #2c3e50;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 20px 0;
+            animation: reveal 1s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .case-number {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .case-type-badge {
+            display: inline-block;
+            background: #2c3e50;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 12px 0;
+        }
+
+        .case-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 16px 0;
+        }
+
+        .case-description {
+            font-size: 16px;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin: 16px 0;
+            padding: 16px;
+            background: #ecf0f1;
+            border-left: 4px solid #2c3e50;
+            border-radius: 4px;
+        }
+
+        .case-duration {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        .case-drama-text {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 30px 0;
+            animation: pulse 2s infinite;
+        }
+
+        .trial-day-header {
+            background: #2c3e50;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .speaker-box {
+            background: #ecf0f1;
+            border-left: 4px solid #2c3e50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .speaker-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .speaker-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #1a1a1a;
+        }
+
+        .evidence-timer {
+            position: relative;
+            margin: 20px 0;
+            padding: 16px;
+            background: #f9f9f9;
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+        }
+
+        .timer-bar {
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #e74c3c);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .timer-text {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .evidence-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .evidence-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .evidence-description {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .skip-button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .trial-progress {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .courtroom-scene {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <!-- JURY SUMMONS SCREEN -->
     <div id="summons-screen" class="screen active">
-        <div class="box">
-            <div class="title">⚖️ OFFICIAL JURY DUTY SUMMONS</div>
-            <div class="text" style="font-size: 13px; margin: 16px 0; text-align: center; letter-spacing: 2px;">
-                UNITED TRIBUNAL COURT
+        <div class="summons-container">
+            <div class="summons-header">
+                <div class="court-seal">⚖️</div>
+                <div class="court-name">UNITED TRIBUNAL COURT</div>
+                <div class="summons-date" id="summons-date-display">March 20, 2026</div>
             </div>
-            <div class="warning-box">
-                You have been randomly selected to serve as a juror in the United Tribunal Court.
-                Your service is mandatory and a fundamental responsibility of citizenship.
+
+            <div class="summons-body">
+                <p style="text-align: center; font-weight: 700; font-size: 16px; margin: 20px 0;">
+                    JURY DUTY SUMMONS - OFFICIAL NOTICE
+                </p>
+
+                <p>
+                    You have been randomly selected from registered voters in our jurisdiction to serve as a juror in the United Tribunal Court. Your service is mandatory and represents a fundamental responsibility of citizenship in our judicial system.
+                </p>
+
+                <div class="summons-details">
+                    <div class="summons-details-item">📋 CASE TYPE: To Be Assigned Upon Selection</div>
+                    <div class="summons-details-item">📍 LOCATION: United Tribunal Court, 100 Civic Center, Downtown</div>
+                    <div class="summons-details-item">📞 JURY HOTLINE: 1-800-TRIBUNAL-1</div>
+                    <div class="summons-details-item">⏰ CALL-IN WINDOW: 8:00 AM Daily for 7 Consecutive Days</div>
+                </div>
+
+                <p style="font-weight: 600;">IMPORTANT INSTRUCTIONS:</p>
+                <p>
+                    You must call the jury hotline <strong>every morning at 8:00 AM for 7 consecutive days starting tomorrow</strong>. The automated system will inform you whether you have been assigned to a case and must report to the United Tribunal Court.
+                </p>
+
+                <p style="font-size: 13px; color: #666;">
+                    <em>Please have your juror number ready when calling: #TRIBUNAL-2024</em>
+                </p>
+
+                <div class="summons-warning">
+                    ⚠️ FAILURE TO CALL OR REPORT IS CONTEMPT OF COURT
+                    <br><br>
+                    Non-compliance may result in fines up to $1,200 and/or jail time. Deliberate evasion may trigger additional legal proceedings.
+                </div>
+
+                <p style="font-size: 13px; margin-top: 30px; color: #666; border-top: 1px solid #ddd; padding-top: 20px;">
+                    By clicking "I UNDERSTAND," you acknowledge that you have received and understand this official summons to appear. You agree to comply with all jury duty requirements and understand the legal consequences of non-compliance.
+                </p>
             </div>
-            <div class="text">
-                <strong>REPORT DATE:</strong> Tomorrow, 8:00 AM<br>
-                <strong>LOCATION:</strong> United Tribunal Court, 100 Civic Center, Downtown<br>
-                <strong>JURY HOTLINE:</strong> 1-800-TRIBUNAL-1<br>
-            </div>
-            <div class="text">
-                <strong>IMPORTANT INSTRUCTIONS:</strong>
-            </div>
-            <div class="text">
-                You must call the jury hotline <strong>every morning at 8:00 AM for 7 consecutive days</strong>. The hotline will inform you whether you must report to the United Tribunal Court. Failure to call in or report is contempt of court.
-            </div>
-            <div class="warning-box">
-                ⚠️ FAILURE TO REPORT IS CONTEMPT OF COURT - Subject to fines and jail time
-            </div>
-            <div class="button-group">
-                <button class="primary" onclick="acceptSummons()">I UNDERSTAND - BEGIN</button>
+
+            <div class="button-group" style="margin-top: 30px;">
+                <button class="primary" onclick="acceptSummons()" style="width: 100%; padding: 16px; font-size: 16px;">
+                    I UNDERSTAND - BEGIN CALL-IN WEEK
+                </button>
             </div>
         </div>
     </div>
@@ -470,14 +813,18 @@
                 </div>
             </div>
 
+            <div class="day-flavor-text" id="day-flavor-morning"></div>
+
             <div class="calendar-grid" id="calendar-grid"></div>
 
-            <div style="margin-top: 30px; text-align: center;">
-                <div class="text" style="font-size: 16px; margin-bottom: 20px;">
+            <div style="margin-top: 30px;">
+                <div class="text" style="font-size: 16px; margin-bottom: 20px; text-align: center;">
                     <strong id="callin-message">Ready to make your daily call?</strong>
                 </div>
-                <button class="primary" style="padding: 16px 40px; font-size: 16px;" onclick="callHotline()">CALL JURY HOTLINE</button>
-                <button style="margin-left: 12px; padding: 16px 40px; font-size: 16px;" onclick="declineJuryDuty()">DECLINE (Risk Consequences)</button>
+                <div class="button-group">
+                    <button class="primary" style="flex: 1; padding: 16px 40px; font-size: 16px;" onclick="callHotline()">📞 CALL JURY HOTLINE</button>
+                    <button style="flex: 1; padding: 16px 40px; font-size: 16px;" onclick="declineJuryDuty()">❌ DECLINE (Risk)</button>
+                </div>
             </div>
 
             <div id="callin-result" style="margin-top: 30px; text-align: center; font-size: 16px; font-weight: 600;"></div>
@@ -487,16 +834,18 @@
     <!-- CASE ASSIGNMENT SCREEN -->
     <div id="case-assignment-screen" class="screen">
         <div class="box">
-            <div class="title">📋 CASE ASSIGNMENT</div>
-            <div class="text" style="text-align: center; margin: 30px 0; font-size: 18px; font-weight: 600;">
-                Your case has been randomly assigned...
+            <div class="title">📋 CASE ASSIGNMENT - RANDOM SELECTION</div>
+            <div class="case-drama-text" id="case-drama-message">
+                Your case is being assigned...
             </div>
-            <div id="case-card" style="background: #f9f9f9; border: 2px solid #2c3e50; border-radius: 8px; padding: 24px; margin: 20px 0;">
-                <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;" id="case-number"></div>
-                <div style="font-size: 14px; color: #666; margin-bottom: 16px;" id="case-type"></div>
-                <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px;" id="case-name"></div>
-                <div style="font-size: 14px; margin-bottom: 16px;" id="case-desc"></div>
-                <div style="font-size: 13px; color: #666;" id="case-duration"></div>
+            <div class="case-reveal-container">
+                <div class="case-card" id="case-card">
+                    <div class="case-number" id="case-number"></div>
+                    <div class="case-type-badge" id="case-type"></div>
+                    <div class="case-name" id="case-name"></div>
+                    <div class="case-description" id="case-desc"></div>
+                    <div class="case-duration" id="case-duration"></div>
+                </div>
             </div>
             <div class="button-group">
                 <button class="primary" onclick="proceedToVoirDire()">PROCEED TO JURY SELECTION</button>
@@ -532,34 +881,149 @@
         </div>
     </div>
 
-    <!-- TRIAL SCREEN -->
-    <div id="trial-screen" class="screen">
+    <!-- TRIAL PHASE 1: JUDGE'S OPENING -->
+    <div id="trial-judge-opening-screen" class="screen">
         <div class="box">
-            <div class="title" id="trial-title">⚖️ TRIAL - EVIDENCE PRESENTATION</div>
-            <div class="header">
-                <div class="header-stat">
-                    <div class="header-label">Defendant</div>
-                    <div class="header-value" id="defendant-name"></div>
+            <div class="trial-day-header">⚖️ JUDGE'S OPENING STATEMENT</div>
+            <div class="courtroom-scene">
+                The judge sits at the elevated bench, all eyes on you in the jury box.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name">Judge Michael Richardson</div>
+                <div class="speaker-text">
+                    "Ladies and gentlemen of the jury, thank you for your service. In this case, you will hear evidence from both the prosecution and the defense. It is your duty to listen carefully, set aside personal biases, and render a verdict based solely on the facts presented and the law as I instruct you. The burden of proof rests entirely with the prosecution. The defendant is presumed innocent until proven guilty beyond a reasonable doubt. Both sides will present their case, and then you will deliberate in private to reach a verdict. Do not discuss this case with anyone until jury deliberations begin. Are there any questions?"
                 </div>
-                <div class="header-stat">
-                    <div class="header-label">Charge</div>
-                    <div class="header-value" id="charge"></div>
-                </div>
-                <div class="header-stat">
-                    <div class="header-label">Day</div>
-                    <div class="header-value" id="trial-day">1</div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="advanceTrial()">UNDERSTOOD - CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRIAL PHASE 2: PROSECUTION OPENING -->
+    <div id="trial-prosecution-opening-screen" class="screen">
+        <div class="box">
+            <div class="trial-day-header">📋 PROSECUTION OPENING STATEMENT</div>
+            <div class="courtroom-scene">
+                The prosecution attorney stands and addresses the jury with a serious expression.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name">Assistant U.S. Attorney Sarah Morrison</div>
+                <div class="speaker-text" id="prosecution-opening-text"></div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="advanceTrial()">CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRIAL PHASE 3: DEFENSE OPENING -->
+    <div id="trial-defense-opening-screen" class="screen">
+        <div class="box">
+            <div class="trial-day-header">📋 DEFENSE OPENING STATEMENT</div>
+            <div class="courtroom-scene">
+                The defense attorney rises and approaches the jury, speaking calmly but with conviction.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name">Defense Attorney James Whitmore</div>
+                <div class="speaker-text" id="defense-opening-text"></div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="advanceTrial()">CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRIAL PHASE 4: EVIDENCE/TESTIMONY -->
+    <div id="trial-evidence-screen" class="screen">
+        <div class="box">
+            <div class="trial-day-header" id="evidence-day-header">DAY 1: EVIDENCE PRESENTATION</div>
+            <div class="trial-progress" id="evidence-progress"></div>
+
+            <div id="current-evidence-item"></div>
+
+            <div class="evidence-timer">
+                <div class="timer-text"><strong id="timer-label">Time Remaining:</strong> <span id="timer-seconds">30</span>s | ⏱️ <em>Skip available after 15s</em></div>
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timer-fill"></div>
                 </div>
             </div>
 
-            <div class="subtitle">PROSECUTION'S CASE</div>
-            <div id="prosecution-case" style="margin-bottom: 20px;"></div>
+            <div class="skip-button-container">
+                <button class="primary" id="skip-evidence-btn" onclick="skipCurrentEvidence()" style="display: none;">SKIP TO NEXT (15s elapsed)</button>
+                <button class="primary" id="next-evidence-btn" onclick="nextEvidence()" style="display: none;">NEXT EVIDENCE</button>
+            </div>
 
-            <div class="subtitle">EVIDENCE</div>
-            <div id="evidence-list" style="margin-bottom: 20px;"></div>
+            <div id="evidence-notes-summary" style="margin-top: 20px; padding: 12px; background: #ecf0f1; border-radius: 4px; display: none;">
+                <strong>Evidence Noted:</strong>
+                <div id="notes-list" style="margin-top: 8px; font-size: 13px;"></div>
+            </div>
+        </div>
+    </div>
 
-            <div class="subtitle">DEFENSE'S CASE</div>
-            <div id="defense-case" style="margin-bottom: 20px;"></div>
+    <!-- TRIAL PHASE 5: CROSS-EXAMINATION -->
+    <div id="trial-cross-exam-screen" class="screen">
+        <div class="box">
+            <div class="trial-day-header">⚔️ CROSS-EXAMINATION</div>
+            <div class="courtroom-scene">
+                The opposing attorney rises to question the witness's testimony.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name" id="cross-exam-attorney"></div>
+                <div class="speaker-text" id="cross-exam-text"></div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="advanceTrial()">CONTINUE</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- TRIAL PHASE 6: CLOSING STATEMENTS -->
+    <div id="trial-prosecution-closing-screen" class="screen">
+        <div class="box">
+            <div class="trial-day-header">📋 PROSECUTION CLOSING ARGUMENT</div>
+            <div class="courtroom-scene">
+                The prosecution makes their final argument to the jury.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name">Assistant U.S. Attorney Sarah Morrison</div>
+                <div class="speaker-text" id="prosecution-closing-text"></div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="advanceTrial()">CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="trial-defense-closing-screen" class="screen">
+        <div class="box">
+            <div class="trial-day-header">📋 DEFENSE CLOSING ARGUMENT</div>
+            <div class="courtroom-scene">
+                The defense attorney makes their final passionate plea to the jury.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name">Defense Attorney James Whitmore</div>
+                <div class="speaker-text" id="defense-closing-text"></div>
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="advanceTrial()">CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRIAL PHASE 7: JUDGE INSTRUCTIONS -->
+    <div id="trial-jury-instructions-screen" class="screen">
+        <div class="box">
+            <div class="trial-day-header">⚖️ JUDGE'S JURY INSTRUCTIONS</div>
+            <div class="courtroom-scene">
+                The judge addresses you one final time before deliberation.
+            </div>
+            <div class="speaker-box">
+                <div class="speaker-name">Judge Michael Richardson</div>
+                <div class="speaker-text">
+                    "Members of the jury, you have now heard all of the evidence in this case. The law that you must follow is this: The defendant is presumed innocent, and the prosecution has the burden of proving guilt beyond a reasonable doubt. This means that the evidence must be so convincing that a reasonable person would not hesitate to rely on it in making an important decision. If you have a reasonable doubt about the defendant's guilt, it is your duty to vote not guilty. You must apply the law as I have given it to you, regardless of your personal feelings about the law. Please keep your minds open during deliberation and listen to all viewpoints. You must come to a unanimous verdict—all twelve of you must agree. You will now adjourn to the deliberation room. Do not discuss the case until all jurors are present."
+                </div>
+            </div>
             <div class="button-group">
                 <button class="primary" onclick="proceedToDeliberation()">PROCEED TO JURY DELIBERATION</button>
             </div>
@@ -1377,6 +1841,38 @@ function getArgumentsForPersonality(personality, vote, caseType) {
     return vote === 'guilty' ? (guiltyArgs[personality] || guiltyArgs.Logical) : (notGuiltyArgs[personality] || notGuiltyArgs.Logical);
 }
 
+// ==================== DAILY FLAVOR TEXT ====================
+const dailyFlavorText = {
+    1: {
+        morning: "You receive an official-looking envelope in the mail. Your heart sinks as you read the jury summons. Jury duty... really? You set an alarm for tomorrow.",
+        callTime: "You dial the number. An automated voice answers: 'You have been selected for jury duty. Please call again tomorrow.'"
+    },
+    2: {
+        morning: "You wake up to your alarm. Another day of jury duty calls. It's starting to feel routine. Maybe I'll get called today?",
+        callTime: "The voice responds again: 'Please call again tomorrow at 8:00 AM.'"
+    },
+    3: {
+        morning: "Third day. This is getting annoying. But you promised to show up... You grab your coffee and make the call.",
+        callTime: "Your pulse quickens. Today is one of the days you might actually be called..."
+    },
+    4: {
+        morning: "You're wondering if you'll ever actually get selected. This could drag on for days. You call anyway.",
+        callTime: "The hotline voice continues its routine message."
+    },
+    5: {
+        morning: "Halfway through the week. The reality of jury duty is starting to set in. You need to actually block time off work.",
+        callTime: "Your anxiety grows. Which day will it be?"
+    },
+    6: {
+        morning: "Two more days. You're committed now. You call in, mentally preparing yourself.",
+        callTime: "The waiting continues. The tension builds."
+    },
+    7: {
+        morning: "Final day of the call-in week. Today is guaranteed - you WILL be called.",
+        callTime: "The automated voice announces: 'REPORT TO UNITED TRIBUNAL COURT TOMORROW AT 8:30 AM.' This is it. You're a juror."
+    }
+};
+
 // ==================== VOIR DIRE QUESTIONS ====================
 const voirDireQuestions = {
     'WHITE COLLAR': [
@@ -1488,6 +1984,12 @@ function renderCallInWeek() {
 
     document.getElementById('callin-day').textContent = `${gameState.callInDay} of 7`;
     document.getElementById('calls-made').textContent = gameState.callInDay - 1;
+
+    // Display daily flavor text
+    const flavor = dailyFlavorText[gameState.callInDay];
+    if (flavor) {
+        document.getElementById('day-flavor-morning').textContent = flavor.morning;
+    }
 }
 
 function callHotline() {
@@ -1500,20 +2002,30 @@ function callHotline() {
         called = Math.random() < 0.5; // 50% chance days 3-6
     }
 
+    // Show flavor text for the call
+    const flavor = dailyFlavorText[gameState.callInDay];
+    if (flavor) {
+        document.getElementById('callin-result').innerHTML = `<div style="font-style: italic; color: #2c3e50; margin: 20px 0;">"${flavor.callTime}"</div>`;
+    }
+
     if (called) {
-        document.getElementById('callin-result').innerHTML = '<div style="color: #27ae60; font-size: 18px;">✓ REPORT TO COURTHOUSE TOMORROW AT 8:30 AM</div>';
-        gameState.hasBeenCalled = true;
-        document.getElementById('callin-status').textContent = 'CALLED';
-        setTimeout(() => proceedAfterCallIn(), 2000);
+        setTimeout(() => {
+            document.getElementById('callin-result').innerHTML += '<div style="color: #27ae60; font-size: 18px; margin-top: 20px;"><strong>✓ REPORT TO COURTHOUSE TOMORROW AT 8:30 AM</strong></div>';
+            gameState.hasBeenCalled = true;
+            document.getElementById('callin-status').textContent = 'CALLED';
+            setTimeout(() => proceedAfterCallIn(), 3000);
+        }, 1500);
     } else {
-        document.getElementById('callin-result').innerHTML = '<div style="color: #666;">Check again tomorrow at 8:00 AM</div>';
-        gameState.callInDay++;
-        if (gameState.callInDay > 7) {
-            // All 7 days called, last day guarantees call
-            proceedAfterCallIn();
-        } else {
-            setTimeout(() => renderCallInWeek(), 1000);
-        }
+        setTimeout(() => {
+            document.getElementById('callin-result').innerHTML += '<div style="color: #666; margin-top: 20px;">Check again tomorrow at 8:00 AM</div>';
+            gameState.callInDay++;
+            if (gameState.callInDay > 7) {
+                // All 7 days called, last day guarantees call
+                proceedAfterCallIn();
+            } else {
+                setTimeout(() => renderCallInWeek(), 2000);
+            }
+        }, 1500);
     }
 }
 
@@ -1521,37 +2033,57 @@ function declineJuryDuty() {
     gameState.declineCount++;
     sessionStorage.setItem('declineCount', gameState.declineCount);
 
+    // Early decline (days 1-6) vs late decline (day 7) has different severity
+    const isLateDecline = gameState.callInDay === 7;
+    const declineSeverity = isLateDecline ? 'SEVERE' : 'NORMAL';
+
     if (gameState.declineCount === 3) {
-        // Trigger contempt trial
-        showScreen('contempt-screen');
+        // Trigger contempt trial - especially severe if declined on day 7
+        document.getElementById('decline-title').textContent = '⚠️ FINAL WARNING - CONTEMPT OF COURT TRIAL';
+        const content = document.getElementById('decline-content');
+        content.innerHTML = `
+            <div class="warning-box" style="background: #ffe6e6; border-color: #e74c3c;">
+                <strong style="color: #c0392b; font-size: 16px;">THREE DECLINES DETECTED - COURT PROCEEDING INITIATED</strong>
+            </div>
+            <p class="text" style="margin-top: 20px;">You have now declined jury duty three times. The United Tribunal Court is filing contempt of court charges against you.</p>
+            <p class="text"><strong>PENALTY SEVERITY: ${isLateDecline ? 'EXTREME (Declined on final day)' : 'SEVERE'}</strong></p>
+            <p class="text">You will be tried before a federal judge for willful evasion of jury duty. The judge will determine your sentence based on your defense strategy.</p>
+            <p class="text" style="color: #e74c3c; font-weight: 600;">Potential penalties include: substantial fines ($500-$1,200) and/or mandatory community service hours.</p>
+            <p class="text">You must proceed to trial immediately.</p>
+        `;
+        showScreen('decline-screen');
+        gameState.pendingContemptTrial = true;
     } else {
         // Show consequence
         const content = document.getElementById('decline-content');
         if (gameState.declineCount === 1) {
-            document.getElementById('decline-title').textContent = '⚠️ CONSEQUENCE: ALTERNATE JURY DUTY';
+            document.getElementById('decline-title').textContent = `⚠️ ${isLateDecline ? 'SEVERE' : 'FIRST'} CONSEQUENCE: ALTERNATE JURY DUTY`;
             content.innerHTML = `
                 <div class="warning-box">
-                    <strong>You have declined jury duty.</strong> As your first offense, you are assigned to serve as an ALTERNATE juror on the next case.
+                    <strong>You have declined jury duty on Day ${gameState.callInDay}.</strong> ${isLateDecline ? 'This late decline is being treated VERY SERIOUSLY.' : 'As your first offense, you are assigned alternate duty.'}
                 </div>
-                <p class="text">• Alternate jurors observe but cannot vote unless a seated juror is removed</p>
-                <p class="text">• You will attend all trial proceedings</p>
-                <p class="text">• If called to serve, you will receive voting rights</p>
-                <p class="text">• Failure to appear = Second offense</p>
+                <p class="text">• You are assigned to serve as an ALTERNATE juror on the next case</p>
+                <p class="text">• Alternate jurors observe all proceedings but cannot vote unless a seated juror is removed</p>
+                <p class="text">• You must attend and participate in jury selection (voir dire)</p>
+                <p class="text">• Failure to appear for this case = Immediate second offense</p>
+                ${isLateDecline ? '<p class="text" style="color: #e74c3c;"><strong>⚠️ NOTE: Declining on the final day (Day 7) is treated as a serious violation by the court.</strong></p>' : ''}
                 <p style="margin-top: 20px; color: #e74c3c;"><strong>Decline Count: 1/3</strong></p>
                 <p style="color: #666;">Two more declines will result in contempt trial.</p>
             `;
         } else {
-            document.getElementById('decline-title').textContent = '⚠️ SERIOUS CONSEQUENCE: MANDATORY DIFFICULT CASES';
+            document.getElementById('decline-title').textContent = '⚠️ SEVERE CONSEQUENCE: MANDATORY DIFFICULT CASES';
             content.innerHTML = `
                 <div class="warning-box">
-                    <strong>You have declined jury duty twice.</strong> The court assigns you to two MANDATORY consecutive cases.
+                    <strong>You have declined jury duty twice (Day ${gameState.callInDay}).</strong> The court is imposing harsh mandatory service requirements.
                 </div>
-                <p class="text">• Next two cases will be complex/serious crimes (no easy cases)</p>
-                <p class="text">• You cannot refuse these assignments</p>
-                <p class="text">• You must serve as a regular juror (full voting rights, increased responsibility)</p>
-                <p class="text">• One more decline triggers contempt of court proceedings</p>
+                <p class="text">• You are REQUIRED to serve on the next TWO consecutive cases</p>
+                <p class="text">• Cases will be complex/serious crimes (murder, assault, major fraud)</p>
+                <p class="text">• You CANNOT refuse these assignments or further decline</p>
+                <p class="text">• You will serve as a regular juror with FULL voting rights and deliberation responsibilities</p>
+                <p class="text">• One more decline will immediately trigger contempt of court trial</p>
+                ${isLateDecline ? '<p class="text" style="color: #e74c3c;"><strong>⚠️ COURT NOTE: Your repeated evasion, especially this late in the week, is deeply concerning to the court.</strong></p>' : ''}
                 <p style="margin-top: 20px; color: #e74c3c;"><strong>Decline Count: 2/3</strong></p>
-                <p style="color: #e74c3c;"><strong>⚠️ ONE MORE DECLINE RESULTS IN CONTEMPT TRIAL</strong></p>
+                <p style="color: #e74c3c;"><strong>⚠️ ONE MORE DECLINE TRIGGERS IMMEDIATE CONTEMPT TRIAL</strong></p>
             `;
         }
         showScreen('decline-screen');
@@ -1559,9 +2091,14 @@ function declineJuryDuty() {
 }
 
 function acknowledgeConsequence() {
-    gameState.callInDay = 1;
-    renderCallInWeek();
-    showScreen('callin-screen');
+    if (gameState.pendingContemptTrial) {
+        gameState.pendingContemptTrial = false;
+        showScreen('contempt-screen');
+    } else {
+        gameState.callInDay = 1;
+        renderCallInWeek();
+        showScreen('callin-screen');
+    }
 }
 
 function proceedAfterCallIn() {
@@ -1580,11 +2117,23 @@ function assignRandomCase() {
 
 function renderCaseAssignment() {
     const c = gameState.currentCase;
-    document.getElementById('case-number').textContent = c.caseNumber;
-    document.getElementById('case-type').textContent = c.type + ' CRIME';
-    document.getElementById('case-name').textContent = c.name;
-    document.getElementById('case-desc').textContent = c.descShort;
-    document.getElementById('case-duration').textContent = '📅 ' + c.duration;
+
+    // Show loading state
+    document.getElementById('case-drama-message').textContent = 'Loading case details...';
+    document.getElementById('case-card').style.opacity = '0';
+
+    // Dramatic reveal with delay
+    setTimeout(() => {
+        document.getElementById('case-number').textContent = c.caseNumber;
+        document.getElementById('case-type').textContent = '⚖️ ' + c.type.toUpperCase() + ' CRIME';
+        document.getElementById('case-name').textContent = c.name;
+        document.getElementById('case-desc').textContent = c.descShort;
+        document.getElementById('case-duration').textContent = '📅 Duration: ' + c.duration;
+
+        // Animate in
+        document.getElementById('case-card').style.opacity = '1';
+        document.getElementById('case-drama-message').textContent = '⚡ Your case has been assigned!';
+    }, 1000);
 }
 
 function proceedToVoirDire() {
@@ -1636,30 +2185,171 @@ function submitVoirDireAnswer() {
     }
 }
 
-// ==================== TRIAL ====================
+// ==================== TRIAL INITIATION ====================
 function proceedToTrial() {
-    renderTrial();
-    showScreen('trial-screen');
-}
-
-function renderTrial() {
-    const c = gameState.currentCase;
-    document.getElementById('trial-title').textContent = `⚖️ TRIAL - ${c.name}`;
-    document.getElementById('defendant-name').textContent = c.defendant;
-    document.getElementById('charge').textContent = c.crime;
-
-    document.getElementById('prosecution-case').innerHTML = `<div class="text">${c.prosecutionSummary}</div>`;
-    document.getElementById('defense-case').innerHTML = `<div class="text">${c.defenseSummary}</div>`;
-
-    let evidenceHtml = '';
-    c.evidence.forEach(e => {
-        evidenceHtml += `<span class="evidence-bubble" onclick="noteEvidence(this)" title="${e.description}">${e.name}</span>`;
-    });
-    document.getElementById('evidence-list').innerHTML = evidenceHtml;
+    // Start the multi-phase trial sequence
+    startTrial();
 }
 
 function noteEvidence(el) {
     el.classList.toggle('noted');
+}
+
+// ==================== TRIAL PHASE ====================
+const trialPhases = [
+    'judge-opening',
+    'prosecution-opening',
+    'defense-opening',
+    'evidence',
+    'prosecution-closing',
+    'defense-closing',
+    'jury-instructions'
+];
+
+function startTrial() {
+    gameState.trialPhaseIndex = 0;
+    gameState.currentEvidenceIndex = 0;
+    gameState.evidenceTimer = null;
+    gameState.notedEvidence = [];
+    advanceTrial();
+}
+
+function advanceTrial() {
+    if (gameState.trialPhaseIndex < trialPhases.length) {
+        const phase = trialPhases[gameState.trialPhaseIndex];
+
+        switch(phase) {
+            case 'judge-opening':
+                showScreen('trial-judge-opening-screen');
+                break;
+            case 'prosecution-opening':
+                renderProsecutionOpening();
+                showScreen('trial-prosecution-opening-screen');
+                break;
+            case 'defense-opening':
+                renderDefenseOpening();
+                showScreen('trial-defense-opening-screen');
+                break;
+            case 'evidence':
+                startEvidencePhase();
+                break;
+            case 'prosecution-closing':
+                renderProsecutionClosing();
+                showScreen('trial-prosecution-closing-screen');
+                break;
+            case 'defense-closing':
+                renderDefenseClosing();
+                showScreen('trial-defense-closing-screen');
+                break;
+            case 'jury-instructions':
+                showScreen('trial-jury-instructions-screen');
+                break;
+        }
+        gameState.trialPhaseIndex++;
+    }
+}
+
+function renderProsecutionOpening() {
+    const c = gameState.currentCase;
+    document.getElementById('prosecution-opening-text').textContent = c.prosecutionOpening || c.prosecutionSummary;
+}
+
+function renderDefenseOpening() {
+    const c = gameState.currentCase;
+    document.getElementById('defense-opening-text').textContent = c.defenseOpening || c.defenseSummary;
+}
+
+function renderProsecutionClosing() {
+    const c = gameState.currentCase;
+    document.getElementById('prosecution-closing-text').textContent = c.prosecutionClosing || 'The evidence clearly demonstrates the defendant\'s guilt. All the facts point to one conclusion. We have proven our case beyond a reasonable doubt.';
+}
+
+function renderDefenseClosing() {
+    const c = gameState.currentCase;
+    document.getElementById('defense-closing-text').textContent = c.defenseClosing || 'The prosecution has failed to meet their burden of proof. There are significant gaps in their case, and reasonable doubt exists. You must vote not guilty.';
+}
+
+function startEvidencePhase() {
+    const c = gameState.currentCase;
+    gameState.currentEvidenceIndex = 0;
+    gameState.notedEvidence = [];
+
+    document.getElementById('evidence-progress').textContent = `Evidence: ${gameState.currentEvidenceIndex + 1} of ${c.evidence.length}`;
+
+    displayCurrentEvidence();
+    showScreen('trial-evidence-screen');
+}
+
+function displayCurrentEvidence() {
+    const c = gameState.currentCase;
+    const evidence = c.evidence[gameState.currentEvidenceIndex];
+
+    if (!evidence) {
+        advanceTrial();
+        return;
+    }
+
+    // Reset timer
+    if (gameState.evidenceTimer) clearInterval(gameState.evidenceTimer);
+    gameState.timeRemaining = 30;
+    gameState.canSkip = false;
+
+    // Display evidence
+    const evidenceHtml = `
+        <div class="evidence-item">
+            <div class="evidence-title">📋 ${evidence.name}</div>
+            <div class="evidence-description">${evidence.description}</div>
+        </div>
+    `;
+    document.getElementById('current-evidence-item').innerHTML = evidenceHtml;
+    document.getElementById('evidence-progress').textContent = `Evidence: ${gameState.currentEvidenceIndex + 1} of ${c.evidence.length}`;
+
+    // Start timer
+    startEvidenceTimer();
+
+    // Update buttons
+    document.getElementById('skip-evidence-btn').style.display = 'none';
+    document.getElementById('next-evidence-btn').style.display = 'none';
+}
+
+function startEvidenceTimer() {
+    gameState.evidenceTimer = setInterval(() => {
+        gameState.timeRemaining--;
+        document.getElementById('timer-seconds').textContent = gameState.timeRemaining;
+
+        // Update timer bar
+        const percentage = (gameState.timeRemaining / 30) * 100;
+        document.getElementById('timer-fill').style.width = percentage + '%';
+
+        // Allow skip after 15 seconds
+        if (gameState.timeRemaining === 15 && !gameState.canSkip) {
+            gameState.canSkip = true;
+            document.getElementById('skip-evidence-btn').style.display = 'block';
+        }
+
+        // Auto advance at 0
+        if (gameState.timeRemaining <= 0) {
+            clearInterval(gameState.evidenceTimer);
+            nextEvidence();
+        }
+    }, 1000);
+}
+
+function skipCurrentEvidence() {
+    clearInterval(gameState.evidenceTimer);
+    nextEvidence();
+}
+
+function nextEvidence() {
+    gameState.currentEvidenceIndex++;
+    const c = gameState.currentCase;
+
+    if (gameState.currentEvidenceIndex >= c.evidence.length) {
+        // Move to closing statements
+        advanceTrial();
+    } else {
+        displayCurrentEvidence();
+    }
 }
 
 function proceedToDeliberation() {
