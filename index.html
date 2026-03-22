@@ -307,6 +307,111 @@
             margin-bottom: 4px;
         }
 
+        /* DELIBERATION TIMER STYLES */
+        .deliberation-timer-box {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .deliberation-timer-box.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            animation: pulse 1s infinite;
+        }
+
+        .deliberation-timer-box.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .timer-display {
+            font-size: 24px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        .holdout-display {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 12px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .vote-tally {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .vote-guilty {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .vote-notguilty {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .vote-neutral {
+            color: #95a5a6;
+        }
+
+        .evidence-review-button {
+            background: #3498db;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 8px 4px;
+            transition: background 0.2s;
+        }
+
+        .evidence-review-button:hover {
+            background: #2980b9;
+        }
+
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
         .npc-statement-text {
             font-style: italic;
             color: #555;
@@ -737,6 +842,38 @@
             text-align: center;
             font-style: italic;
         }
+
+        .abandon-button {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 12px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .abandon-button:hover {
+            opacity: 1;
+            background: #c0392b;
+        }
+
+        .case-header-info {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #666;
+            border-left: 4px solid #3498db;
+        }
+
+        .case-header-info strong {
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -992,6 +1129,10 @@
                 <button class="primary" id="skip-evidence-btn" onclick="proceedToClosings()" style="background: #27ae60;">READY FOR CLOSING ARGUMENTS</button>
             </div>
 
+            <div style="text-align: center; margin-top: 16px;">
+                <button class="abandon-button" onclick="if(confirm('Are you sure? Abandoning this case reduces its likelihood in future assignments.')) { abandonCase(0); }">⚠️ ABANDON THIS CASE</button>
+            </div>
+
             <div id="evidence-notes-summary" style="margin-top: 20px; padding: 12px; background: #ecf0f1; border-radius: 4px; display: none;">
                 <strong>Evidence Noted:</strong>
                 <div id="notes-list" style="margin-top: 8px; font-size: 13px;"></div>
@@ -1098,7 +1239,23 @@
                 </div>
             </div>
 
+            <!-- DELIBERATION TIMER -->
+            <div class="deliberation-timer-box" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                <div>⏱️ TIME REMAINING</div>
+                <div class="timer-display" id="deliberation-timer">7:00</div>
+            </div>
+
+            <!-- HOLDOUT DISPLAY -->
+            <div class="holdout-display" id="holdout-tally"></div>
+            <div id="tension-indicator" style="text-align: center; margin: 12px 0; min-height: 20px;"></div>
+
             <div id="npc-discussion" class="deliberation-panel"></div>
+
+            <!-- EVIDENCE & ROUND CONTROLS -->
+            <div style="margin: 20px 0; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;" id="deliberation-controls">
+                <button class="evidence-review-button" onclick="showEvidenceReviewModal()">📋 REVIEW EVIDENCE</button>
+                <button style="background: #95a5a6; color: white; padding: 10px 16px; border: none; border-radius: 4px; cursor: pointer;" onclick="continueDiscussion()">CONTINUE ROUND</button>
+            </div>
 
             <div class="tally-display" id="vote-tally"></div>
 
@@ -1125,6 +1282,9 @@
                     <button onclick="continueDiscussion()">CONTINUE DISCUSSION</button>
                 </div>
                 <div id="speak-options" style="display: none; margin-top: 20px;"></div>
+                <div style="text-align: center; margin-top: 16px;">
+                    <button class="abandon-button" onclick="if(confirm('Are you sure? Abandoning during deliberation (Round ' + gameState.round + ') applies a penalty.')) { abandonCase(gameState.round); }">⚠️ ABANDON THIS CASE</button>
+                </div>
             </div>
 
             <div id="bathroom-break-section" style="display: none; margin-top: 30px;">
@@ -1306,6 +1466,17 @@ const gameState = {
     playerFinalVerdictAnswer: null,
     mistrial: false,
     conviction: 50,
+    
+    // Deliberation mechanics
+    deliberationStartTime: null,
+    deliberationTimeLimit: 420000, // 7 minutes in milliseconds
+    deliberationTimer: null,
+    jurorChallenges: [],
+    seatedJurors: [],
+    playerStatementRound: {},
+    playerStatementInfluence: 0,
+    holdoutDisplayed: false,
+    evidenceReviewsInDeliberation: 0,
 };
 
 // ==================== CASE DATA ====================
@@ -1835,8 +2006,8 @@ function generateJurors(caseType) {
             argumentsSpoken: [],
             persuadedBy: [],
             arguments: {
-                guilty: generateArgumentPool(j.personality, 'guilty', caseType),
-                notGuilty: generateArgumentPool(j.personality, 'notGuilty', caseType)
+                guilty: generateExpandedArgumentPool(j.personality, 'GUILTY', caseType, j.name, j.role),
+                notGuilty: generateExpandedArgumentPool(j.personality, 'NOT GUILTY', caseType, j.name, j.role)
             }
         };
     });
@@ -1954,6 +2125,308 @@ function generateArgumentPool(personality, vote, caseType) {
     const args = vote === 'guilty' ? (guiltyArgs[caseType] || guiltyArgs.MURDER) : (notGuiltyArgs[caseType] || notGuiltyArgs.MURDER);
     return args[personality] || args.Logical;
 }
+
+
+function generateExpandedArgumentPool(personality, vote, caseType, defendant, defendant_short_role) {
+    // Much more comprehensive statement options for deliberation
+    // Includes: legal, evidence-based, emotional, practical, comedic, and personality-matched statements
+
+    const guiltyStatements = {
+        MURDER: {
+            Legal: [
+                "The law requires proof beyond reasonable doubt. The eyewitness testimony from three independent sources meets that standard.",
+                "Premeditation is proven by the defendant's presence at the scene with a loaded weapon at the exact time of the murder.",
+                "The ballistics evidence—99.8% certainty—exceeds any reasonable doubt threshold. That's conviction-level proof."
+            ],
+            Evidence: [
+                "The ballistics match is undeniable. His gun, his fingerprints, his ammunition—it's all there.",
+                "Three eyewitnesses. Not friends. Not people with a stake. Random people who saw him that night.",
+                "Cell phone data places him at Club Nexus at 10:53 PM, 10 minutes before shots fired. That's not coincidence.",
+                "The tattoo on his left temple—the DJ identified him by that specific detail. That's not mistaken identity."
+            ],
+            Emotional: [
+                "James Cooper went out to have a good time and came home in a body bag. Someone has to answer for that.",
+                "Think about his family. They lost their son that night. Marcus Williams took that away.",
+                "A young man's life was stolen. We can't give him back, but we can deliver justice.",
+                "The victim's sister sat in court. Imagine what she's feeling right now."
+            ],
+            Practical: [
+                "Let's be real: the evidence adds up. Gun, fingerprints, witnesses, location data. That's conviction.",
+                "Marcus Williams was there, he had the weapon, he's the one. It's straightforward.",
+                "All of this evidence together points to one conclusion: he did it."
+            ],
+            Comedic: [
+                "I've watched enough crime shows to know what guilty looks like. This is it.",
+                "Three witnesses? That's more witnesses than I have friends.",
+                "He had a gun, he was there, people saw him. What's confusing about this?",
+                "My Tarot cards said guilty. I mean, the evidence said guilty."
+            ]
+        },
+        'WHITE COLLAR': {
+            Legal: [
+                "Embezzlement requires intent and misappropriation. Both are proven by the shell company scheme.",
+                "The defendant had exclusive access to create and approve these transfers. The forensic audit confirms that.",
+                "Federal wire fraud statutes are clear. Moving money with intent to defraud is the definition of this crime."
+            ],
+            Evidence: [
+                "The shell companies have his name on the incorporation documents in his handwriting.",
+                "$2.3 million moved to accounts only he could access. That's not an accounting error.",
+                "The emails are smoking guns. 'Make sure these invoice amounts match what we discussed.'",
+                "His own assistant testified he told her which invoices to 'process quietly.' That's guilty intent."
+            ],
+            Emotional: [
+                "Robert Chen betrayed the trust of his company and its employees.",
+                "Employees lost their retirement savings because of his theft.",
+                "He stole from people who worked with him every day. That's a special kind of betrayal."
+            ],
+            Practical: [
+                "In business, this is exactly how embezzlement works. He had access, motive, and opportunity.",
+                "He created fake companies, routed money, covered his tracks. Textbook theft.",
+                "The paper trail doesn't lie. He's guilty."
+            ],
+            Comedic: [
+                "His accountant wore an $8,000 suit. On a CFO salary. Coincidence? I think not.",
+                "When someone creates a shell company called 'Chen Holdings,' they're not being subtle.",
+                "I tried that scheme on my taxes once. The IRS was not amused. Neither should we be."
+            ]
+        },
+        BIZARRE: {
+            Legal: [
+                "Animal negligence law is clear: the owner is responsible for controlling the animal.",
+                "Dr. Voss had a duty to safely transport the falcon. The injuries prove she breached that duty.",
+                "Criminal negligence occurs when someone fails in a clear duty and causes harm. This case meets that standard."
+            ],
+            Evidence: [
+                "The falcon escaped from her transport crate. The injuries match falcon talons exactly.",
+                "She's a trained veterinarian who knew how dangerous that bird could be.",
+                "She admitted the falcon escaped during her transport. That's the entire case."
+            ],
+            Emotional: [
+                "An innocent person suffered serious injuries because of Dr. Voss's negligence.",
+                "The neighbor's family is dealing with trauma and medical bills because of this.",
+                "Just because she was trying to help the bird doesn't excuse harming a person."
+            ],
+            Practical: [
+                "The facts are simple: her falcon injured someone. She's responsible.",
+                "Being a veterinarian doesn't give you a pass to let dangerous animals roam free.",
+                "Negligence is negligence, regardless of good intentions."
+            ],
+            Comedic: [
+                "A falcon attack case. Only in America. Also: she's guilty.",
+                "I've seen that falcon documentary. Those things are weapons with wings. She should've known.",
+                "If my hamster escaped and bit someone, I'd be liable. She had an apex predator."
+            ]
+        },
+        'STREET CRIME': {
+            Legal: [
+                "Armed robbery requires proof of force and intent to steal. The video and physical evidence prove both.",
+                "The defendant meets every element of the statute. Conviction is legally appropriate.",
+                "Possession of the victim's wallet with the defendant apprehended at the scene meets the legal burden."
+            ],
+            Evidence: [
+                "The store camera shows him at the register with a gun. That's the definition of armed robbery.",
+                "He was apprehended with the victim's wallet and cash from the register.",
+                "The victim identified him immediately in a lineup. No hesitation.",
+                "His clothing matches what was captured on video."
+            ],
+            Emotional: [
+                "That store clerk was terrified for their life. They'll have nightmares for months.",
+                "DeShawn Jackson targeted a hardworking person just trying to make a living.",
+                "Armed robbery isn't a victimless crime. That clerk was traumatized."
+            ],
+            Practical: [
+                "DeShawn Jackson robbed that store. The evidence is clear.",
+                "Video footage, physical evidence, victim identification—it all points to guilt.",
+                "This is straightforward armed robbery. Guilty."
+            ],
+            Comedic: [
+                "Getting caught on camera robbing a store in 2024. Technology: 1, Crime: 0.",
+                "He still has the victim's wallet in his pocket. That's not a defense.",
+                "I've never robbed anything, so I have no sympathy. Guilty."
+            ]
+        },
+        POLITICAL: {
+            Legal: [
+                "Bribery statutes require proof of payment in exchange for official action. The financial trail and contract awards prove this quid pro quo.",
+                "The timing of payments matching contract awards demonstrates the corrupt scheme.",
+                "Federal corruption law applies directly. The elements are all met."
+            ],
+            Evidence: [
+                "$250,000 from TR Advisors to the mayor's personal accounts, then Paramount Construction gets contracts.",
+                "Paramount Construction was the most expensive bidder. Yet they got the contract.",
+                "The shell company was created specifically to hide the money trail.",
+                "The emails show direct communication about timing of payments and contract awards."
+            ],
+            Emotional: [
+                "Mayor Richardson betrayed the public trust for personal gain.",
+                "Taxpayers and public employees were defrauded by the very person they elected.",
+                "Corruption robs the city of resources meant for schools, roads, and services."
+            ],
+            Practical: [
+                "This is how political corruption works. Payment for contracts. It's textbook bribery.",
+                "Mayor Richardson took bribes. That's what the evidence shows.",
+                "Follow the money. It leads directly to guilt."
+            ],
+            Comedic: [
+                "Every politician is guilty of something. This one just got caught.",
+                "A mayor with a shell company account and mysterious payments? Totally normal, right? Guilty.",
+                "I don't trust anyone named Richardson. I mean, he's clearly guilty."
+            ]
+        }
+    };
+
+    const notGuiltyStatements = {
+        MURDER: {
+            Legal: [
+                "The law requires proof BEYOND REASONABLE DOUBT. Eyewitness testimony alone, especially in a dark club, creates reasonable doubt.",
+                "The defendant's presence in the area doesn't prove presence at the scene. That's reasonable doubt.",
+                "Cell phone location data covers a wide area. Being near doesn't mean being inside. Reasonable doubt."
+            ],
+            Evidence: [
+                "Three eyewitnesses? In a dark, crowded club? Eyewitness misidentification is well-documented in legal literature.",
+                "Ballistics experts disagree. When experts disagree, that's reasonable doubt.",
+                "He wasn't caught with the gun. Someone else had access to his apartment.",
+                "Cell phone data is approximate. Tower coverage areas overlap multiple blocks."
+            ],
+            Emotional: [
+                "Marcus Williams has a family. I cannot convict him on circumstantial evidence.",
+                "Wrongful convictions happen. I will not be part of that tragedy.",
+                "Presumption of innocence means something. Without certainty, I must vote not guilty."
+            ],
+            Practical: [
+                "In reality, eyewitnesses are often wrong. That's just a fact.",
+                "The defendant wasn't caught red-handed with the weapon. That's suspicious absence of evidence.",
+                "Too many reasonable explanations exist for this evidence. Not guilty."
+            ],
+            Comedic: [
+                "The real killer is out there, robbing another club. We should find them instead.",
+                "Three people remember seeing something in the dark? I can't remember what I had for breakfast.",
+                "Maybe the eyewitnesses are lying. I have no evidence, but maybe."
+            ]
+        },
+        'WHITE COLLAR': {
+            Legal: [
+                "The prosecution must prove INTENT to commit fraud. Accounting ambiguity is not proof of intent.",
+                "The defendant claims legitimate consulting reimbursements. The burden is on the prosecution to disprove this.",
+                "TechCorp's accounting system was murky. Reasonable doubt exists about intent."
+            ],
+            Evidence: [
+                "The shell companies could have had legitimate purposes we're not aware of.",
+                "The emails are ambiguous. 'Process quietly' could mean streamline procedures.",
+                "His assistant's memory could be faulty. She made other accounting errors.",
+                "Accounting practices in tech are notoriously unclear. This could be legitimate."
+            ],
+            Emotional: [
+                "Robert Chen is a family man. Conviction would destroy his life.",
+                "He claims innocence. I must presume that's true until proven otherwise.",
+                "I cannot be certain enough to ruin someone's entire existence."
+            ],
+            Practical: [
+                "In tech, finances are messy. This could easily be legitimate business activity.",
+                "He had a plausible explanation. Maybe he's right.",
+                "Without absolute clarity, I must give him the benefit of the doubt."
+            ],
+            Comedic: [
+                "Tech guys move money around constantly. That's not embezzlement, that's normal.",
+                "I don't understand tech finance. So, not guilty?",
+                "His accountant's suit was expensive. That means he's credible, therefore the defendant is innocent. Logic."
+            ]
+        },
+        BIZARRE: {
+            Legal: [
+                "The statute requires criminal INTENT. An accident is not a crime.",
+                "Dr. Voss had proper permits for the bird rehabilitation. That's a legal defense.",
+                "Negligence must be willful or reckless. An accident during lawful activity is neither."
+            ],
+            Evidence: [
+                "The falcon escaped ACCIDENTALLY during transport to rehabilitation. That's not criminal negligence.",
+                "Dr. Voss had proper containment equipment that failed.",
+                "She was attempting to SAVE the bird's life. That shows positive intent.",
+                "Accidents happen. Just because an accident caused injury doesn't mean conviction."
+            ],
+            Emotional: [
+                "Dr. Voss was trying to help an injured animal. That's good work, not criminal work.",
+                "She's devastated by what happened. That's someone with a conscience, not a criminal.",
+                "Intent matters. She didn't intend harm.",
+                "We can't punish people for accidents when they're doing good work."
+            ],
+            Practical: [
+                "Accidents are not crimes. This was an accident.",
+                "She was following proper procedure. An unexpected malfunction isn't her fault.",
+                "People get injured every day from accidents. We don't imprison people for accidents."
+            ],
+            Comedic: [
+                "The real criminal is the falcon, and we can't prosecute it. Not guilty.",
+                "If we convict veterinarians for animal-related injuries, nobody helps animals.",
+                "A falcon? We're discussing prison time over a bird incident? Not guilty."
+            ]
+        },
+        'STREET CRIME': {
+            Legal: [
+                "The law requires proof BEYOND REASONABLE DOUBT. Circumstantial evidence alone is insufficient.",
+                "Being in possession of cash and a wallet doesn't automatically prove robbery.",
+                "Identification evidence can be mistaken. That creates reasonable doubt."
+            ],
+            Evidence: [
+                "The victim's identification could be mistaken. People look similar, especially under stress.",
+                "Many people carry cash and have found wallets. Neither proves robbery.",
+                "Video footage from security cameras can be unclear or misidentified.",
+                "Being apprehended near the scene doesn't prove guilt."
+            ],
+            Emotional: [
+                "DeShawn Jackson deserves the presumption of innocence.",
+                "His life depends on reasonable doubt. I must honor that.",
+                "He could be innocent. I cannot take that chance.",
+                "His family's entire future is in my hands. I must be certain."
+            ],
+            Practical: [
+                "In real life, lots of people carry cash. That's not proof.",
+                "Being in the area is not the same as committing the crime.",
+                "Without absolute proof, I must vote not guilty."
+            ],
+            Comedic: [
+                "Maybe the real robber is still out there, and we're blaming the wrong guy.",
+                "We've all carried cash near stores. Are we all robbers? Not guilty.",
+                "Video evidence is grainy. Could be anyone. Probably not guilty."
+            ]
+        },
+        POLITICAL: {
+            Legal: [
+                "Quid pro quo must be EXPLICITLY proven. Circumstantial correlation is insufficient.",
+                "Campaign contributions and consulting fees are legal. No crime proven.",
+                "The defendant had plausible explanations for each transaction."
+            ],
+            Evidence: [
+                "Financial transfers could be legitimate consulting or campaign contributions.",
+                "Correlation between payments and contracts does not prove causation.",
+                "The defendant's explanations were not definitively disproven.",
+                "Shell companies can have legitimate purposes."
+            ],
+            Emotional: [
+                "Mayor Richardson served his community for years. I cannot convict him without certainty.",
+                "He claims innocence. Presumption of innocence protects him.",
+                "Without absolute proof, I protect his reputation and freedom."
+            ],
+            Practical: [
+                "Payments between business people happen constantly. Not all are bribes.",
+                "Contract awards could legitimately go to Paramount Construction.",
+                "Reasonable doubt exists. Therefore, not guilty."
+            ],
+            Comedic: [
+                "Every politician is guilty, but we can only convict one. Pick someone else.",
+                "His last name is Richardson. That's basically innocent-sounding. Not guilty.",
+                "I take bribes all the time in tips and gifts. I mean... not guilty for him."
+            ]
+        }
+    };
+
+    const isGuilty = vote === 'GUILTY';
+    const statements = isGuilty ? guiltyStatements[caseType] || guiltyStatements.MURDER : notGuiltyStatements[caseType] || notGuiltyStatements.MURDER;
+
+    // Return an array of statements for this personality type
+    return statements[personality] || statements.Legal;
+}
+
 
 // ==================== DYNAMIC ARGUMENT SELECTION ====================
 function selectArgumentForNPC(npc, round, jury) {
@@ -2616,6 +3089,13 @@ function proceedAfterChallenge() {
 
 // ==================== TRIAL INITIATION ====================
 function proceedToTrial() {
+    
+// Initialize case progress when game starts
+if (!gameState.caseProgress) {
+    initializeCaseProgress();
+}
+
+
     // Start the multi-phase trial sequence
     startTrial();
 }
@@ -2683,13 +3163,16 @@ function renderJudgeOpening() {
     const c = gameState.currentCase;
     const judgeText = c.judgeOpening || 'Members of the jury, you are here to listen to this case carefully. The defendant is presumed innocent until proven guilty. The burden is on the prosecution to prove guilt beyond a reasonable doubt. Please listen carefully to all the evidence.';
 
-    // Format judge opening with emphasis on key phrases
+    // Format judge opening with emphasis on key phrases - BOLD all critical legal language
     const formatted = judgeText
-        .replace(/beyond a reasonable doubt/gi, '<strong style="color: #c0392b;">beyond a reasonable doubt</strong>')
-        .replace(/presumed innocent/gi, '<strong style="color: #27ae60;">presumed innocent</strong>')
-        .replace(/burden.*prosecution/gi, match => `<strong>${match}</strong>`)
-        .replace(/VERY high bar/gi, '<strong style="color: #c0392b;">VERY high bar</strong>')
-        .replace(/prove/gi, '<strong>prove</strong>');
+        .replace(/beyond a reasonable doubt/gi, '<strong style="color: #c0392b; font-size: 1.05em;">BEYOND A REASONABLE DOUBT</strong>')
+        .replace(/presumed innocent/gi, '<strong style="color: #27ae60; font-size: 1.05em;">PRESUMED INNOCENT</strong>')
+        .replace(/burden.*?prosecution/gi, match => `<strong style="color: #e67e22;">${match.toUpperCase()}</strong>`)
+        .replace(/VERY high bar|high bar|burden/gi, match => `<strong style="color: #c0392b; font-size: 1.05em;">${match.toUpperCase()}</strong>`)
+        .replace(/prove|proving/gi, match => `<strong style="color: #e74c3c;">${match.toUpperCase()}</strong>`)
+        .replace(/reasonable doubt/gi, '<strong style="color: #c0392b;">reasonable doubt</strong>')
+        .replace(/conviction/gi, '<strong>conviction</strong>')
+        .replace(/evidence/gi, '<strong>evidence</strong>');
 
     document.getElementById('judge-opening-text').innerHTML = formatted;
 }
@@ -2858,9 +3341,53 @@ function proceedToDeliberation() {
 }
 
 // ==================== DELIBERATION ====================
+
 function startDeliberation() {
+    gameState.round = 1;
+    gameState.deliberationStartTime = Date.now();
+    gameState.deliberationTimer = null;
+    startDeliberationTimer();
     renderDeliberationRound();
     showScreen('deliberation-screen');
+}
+
+function startDeliberationTimer() {
+    const updateTimer = () => {
+        if (!gameState.deliberationStartTime) return;
+
+        const elapsed = Date.now() - gameState.deliberationStartTime;
+        const remaining = Math.max(0, gameState.deliberationTimeLimit - elapsed);
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+
+        const timerDisplay = document.getElementById('deliberation-timer');
+        if (timerDisplay) {
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} REMAINING`;
+
+            const timerBox = document.querySelector('.deliberation-timer-box');
+            if (remaining <= 120000) {
+                timerBox.classList.add('warning');
+                if (remaining <= 60000) {
+                    timerBox.classList.add('danger');
+                }
+            }
+        }
+
+        if (remaining <= 0) {
+            clearInterval(gameState.deliberationTimer);
+            triggerMistrialByTime();
+        }
+    };
+
+    updateTimer();
+    gameState.deliberationTimer = setInterval(updateTimer, 1000);
+}
+
+function triggerMistrialByTime() {
+    clearInterval(gameState.deliberationTimer);
+    gameState.verdict = 'MISTRIAL - TIME EXPIRED';
+    showScreen('verdict-screen');
+    renderVerdictScreen();
 }
 
 function renderDeliberationRound() {
@@ -2925,6 +3452,9 @@ function renderRound1() {
     document.getElementById('player-voting-section').style.display = 'block';
     document.getElementById('discussion-phase').style.display = 'none';
     renderVerdictButtons();
+
+    // Display holdout status
+    setTimeout(() => displayHoldoutStatus(), 500);
 }
 
 function renderVerdictButtons() {
@@ -2969,6 +3499,12 @@ function submitPlayerVote() {
     const jury = gameState.npcConvictions.find(j => j.id === 7);
     jury.vote = gameState.playerVote;
     jury.conviction = gameState.playerVote === 'GUILTY' ? Math.min(95, jury.conviction + 5) : Math.max(25, jury.conviction - 5);
+
+    // Apply player statement influence to NPC jurors
+    applyPlayerStatementInfluence();
+
+    // Update holdout display
+    displayHoldoutStatus();
 
     gameState.round++;
 
@@ -3153,45 +3689,91 @@ function showBathroomBreakTemptations() {
 
     const temptations = [
         {
-            name: '📱 Check Your Phone',
-            description: 'Scroll through messages and social media for a few minutes. Could you really miss that much?',
-            consequence: 'Your focus is scattered during Round 4. Your conviction becomes less stable.',
+            name: '📱 Check Your Phone - Deep Dive',
+            description: 'That group chat is blowing up. Your friends are commenting on the trial online. Just 10 minutes...',
+            consequence: 'You\'re mentally distracted. You miss crucial NPC arguments in Round 4.',
             effect: (jury) => {
-                // Player conviction becomes less stable (0-20% swing either way)
+                // Player becomes less focused - conviction becomes less stable
+                gameState.playerStatementInfluence -= 8;
                 if (gameState.playerVote === 'GUILTY') {
-                    gameState.conviction = Math.max(30, gameState.conviction - 15);
+                    gameState.conviction = Math.max(30, gameState.conviction - 20);
                 } else {
-                    gameState.conviction = Math.min(70, gameState.conviction + 15);
+                    gameState.conviction = Math.min(70, gameState.conviction + 20);
                 }
+                // NPCs discuss without you present
+                jury.filter(j => j.id !== 7).forEach(npc => {
+                    if (Math.random() > 0.5) {
+                        npc.conviction += (Math.random() - 0.5) * 10;
+                    }
+                });
             }
         },
         {
-            name: '📰 Read the Courthouse Newspaper',
-            description: 'There\'s a newspaper on the sink. Just a quick read won\'t hurt...',
-            consequence: 'You learn some interesting context. Your perspective is clearer.',
+            name: '🚪 Attempt to Escape Through Side Exit',
+            description: 'There\'s a side door to the building. You could just... leave. No one would know.',
+            consequence: 'BAILIFF CATCHES YOU! You\'re held in contempt and forced to rejoin. Jury is angry.',
             effect: (jury) => {
-                // Minor positive effect - strengthens conviction slightly
+                // Massive consequence - most NPCs become hostile
+                jury.filter(j => j.id !== 7).forEach(npc => {
+                    npc.conviction = npc.conviction > 50
+                        ? Math.min(95, npc.conviction + 25)  // Guilty voters become MORE pro-conviction
+                        : Math.max(25, npc.conviction - 25);  // Not guilty voters become MORE skeptical
+                });
+                gameState.bathroomBreaksTaken++;
+            }
+        },
+        {
+            name: '📰 Read Case News Coverage',
+            description: 'A newspaper headline catches your eye: "JURY LEAKED INFORMATION BEFORE VERDICT"',
+            consequence: 'You\'re unsettled. Questioning the integrity of this whole process.',
+            effect: (jury) => {
+                // Moderate negative effect - you become less certain
                 if (gameState.playerVote === 'GUILTY') {
-                    gameState.conviction = Math.min(95, gameState.conviction + 8);
+                    gameState.conviction = Math.max(35, gameState.conviction - 18);
                 } else {
-                    gameState.conviction = Math.max(25, gameState.conviction - 8);
+                    gameState.conviction = Math.min(65, gameState.conviction + 18);
                 }
             }
         },
         {
             name: '👂 Eavesdrop on Lawyers Outside',
-            description: 'You hear the prosecution and defense talking in the hallway. One side seems really confident...',
-            consequence: 'You pick up on some crucial points you missed. A juror becomes more convinced.',
+            description: 'You hear the prosecution and defense talking in the hallway. One side is talking strategy...',
+            consequence: 'You pick up on hidden doubts. One juror becomes less convinced of their position.',
             effect: (jury) => {
-                // Shifts one random juror slightly toward player's position
+                // Moderate positive effect - shifts most convinced juror toward uncertainty
                 if (jury.length > 0) {
-                    const randomJuror = jury[Math.floor(Math.random() * jury.length)];
+                    const mostConvinced = jury.reduce((max, j) => j.conviction > max.conviction ? j : max);
                     if (gameState.playerVote === 'GUILTY') {
-                        randomJuror.conviction = Math.min(85, randomJuror.conviction + 12);
+                        mostConvinced.conviction = Math.min(80, mostConvinced.conviction + 15);
                     } else {
-                        randomJuror.conviction = Math.max(35, randomJuror.conviction - 12);
+                        mostConvinced.conviction = Math.max(40, mostConvinced.conviction - 15);
                     }
                 }
+            }
+        },
+        {
+            name: '🍪 Snack Break at Vending Machine',
+            description: 'There\'s a vending machine. You\'re hungry. A little snack would help you focus...',
+            consequence: 'You return refreshed with a clear head. Small but positive mental reset.',
+            effect: (jury) => {
+                // Small positive effect
+                if (gameState.playerVote === 'GUILTY') {
+                    gameState.conviction = Math.min(90, gameState.conviction + 5);
+                } else {
+                    gameState.conviction = Math.max(30, gameState.conviction - 5);
+                }
+            }
+        },
+        {
+            name: '🎵 Lose Track of Time in Hallway',
+            description: 'You wander into the courthouse library. So quiet. So peaceful. You lose track of time completely.',
+            consequence: 'You miss the entire opening of Round 4. The jury already moved forward without you.',
+            effect: (jury) => {
+                // Severe consequence - you miss crucial arguments
+                jury.filter(j => j.id !== 7).forEach(npc => {
+                    npc.conviction += (npc.conviction > 50 ? 1 : -1) * 15;  // Large shifts happen
+                });
+                gameState.playerStatementInfluence = 0;  // Your voice doesn't matter in Round 4
             }
         }
     ];
@@ -3270,6 +3852,9 @@ function calculateFinalVerdict() {
         gameState.juryVote = 'NOT GUILTY';
     }
 
+    // TRACK CASE COMPLETION for pack distribution
+    recordCaseCompletion(gameState.currentCaseId || 1, gameState.mistrial ? 'MISTRIAL' : gameState.juryVote);
+
     if (gameState.mistrial) {
         renderHungJuryScreen(guiltyVotes, notGuiltyVotes);
     } else {
@@ -3294,6 +3879,52 @@ function proceedToResults() {
     gameState.playerFinalVerdictAnswer = gameState.playerVote;
     renderResults();
     showScreen('results-screen');
+}
+
+function abandonCase(round) {
+    if (!gameState.caseProgress) {
+        initializeCaseProgress();
+    }
+
+    const caseId = gameState.currentCaseId || 1;
+    recordCaseAbandonment(caseId, round || gameState.round || 1);
+
+    // Show abandonment message
+    const abandonMessage = `
+        <div class="box" style="background: #fff3cd; border: 2px solid #e67e22;">
+            <div class="title" style="border-bottom: 2px solid #e67e22; color: #e67e22;">⚠️ CASE ABANDONED</div>
+            <div class="text" style="margin: 16px 0;">
+                You have abandoned this case during deliberation.
+            </div>
+            <div style="background: white; padding: 12px; border-radius: 4px; margin: 12px 0; font-size: 13px; color: #666;">
+                <strong>Consequence:</strong> This case will appear less frequently (50% probability) in future assignments.
+                <br><br>
+                Try to complete more cases than you abandon for better rewards and faster progression.
+            </div>
+            <div class="button-group">
+                <button class="primary" onclick="proceedToNextCase()" style="background: #3498db;">PROCEED TO NEXT CASE</button>
+            </div>
+        </div>
+    `;
+
+    document.querySelector('.container').innerHTML = abandonMessage;
+}
+
+function proceedToNextCase() {
+    // Reset game state for next case
+    gameState.round = 1;
+    gameState.playerVote = null;
+    gameState.playerJustification = null;
+    gameState.currentEvidenceIndex = 0;
+    gameState.crossExamIndex = 0;
+    gameState.npcConvictions = [];
+
+    // Select next case
+    const nextCaseId = selectNextCase(1);
+    gameState.currentCaseId = nextCaseId;
+
+    // Assign and start trial
+    assignCaseToPlayer();
 }
 
 // ==================== RESULTS ====================
@@ -3428,6 +4059,419 @@ function acknowledgeContemptVerdict() {
 
 // Initialize - don't render calendar until user clicks Begin
 // renderCallInWeek() will be called from acceptSummons()
+
+
+function applyJurySelectionConsequences() {
+    // Attorneys may challenge jurors based on voir dire answers
+    // This affects who gets seated
+
+    const jury = gameState.npcConvictions;
+    const playerResponses = gameState.voirDireResponses || [];
+
+    // Simple implementation: attorneys challenge 1-2 jurors if player shows bias
+    let challengesUsed = 0;
+    const maxChallenges = 2;
+
+    // If player's responses showed bias toward conviction, defense challenges
+    // If player's responses showed bias toward acquittal, prosecution challenges
+
+    jury.forEach((npc, idx) => {
+        if (challengesUsed >= maxChallenges) return;
+
+        // Simulate peremptory challenge
+        if (Math.random() < 0.15 && npc.id !== 7) {
+            npc.challenged = true;
+            gameState.jurorsChallenged.push(npc.id);
+            challengesUsed++;
+        }
+    });
+}
+
+function displayFinalJuryComposition() {
+    // Show which jurors are seated before trial begins
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7 && !j.challenged);
+    let compositionText = '<strong>Final Jury Composition:</strong>\n';
+
+    jury.forEach((npc, idx) => {
+        if (idx < 11) {  // 12 total with player
+            compositionText += `Juror ${npc.id}: ${npc.name} (${npc.personality}) - ${npc.role}\n`;
+        }
+    });
+
+    console.log(compositionText);  // For debugging
+}
+
+
+
+function displayHoldoutStatus() {
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+    const guiltyCount = jury.filter(j => j.vote === 'GUILTY').length;
+    const notGuiltyCount = jury.filter(j => j.vote === 'NOT GUILTY').length;
+    const playerVote = gameState.playerVote;
+
+    let playerTotal = guiltyCount;
+    if (playerVote === 'GUILTY') playerTotal++;
+    else if (playerVote === 'NOT GUILTY') playerTotal = notGuiltyCount + 1;
+
+    const tallyDiv = document.getElementById('holdout-tally');
+    if (tallyDiv) {
+        const remaining = 12 - (guiltyCount + notGuiltyCount + 1);
+        tallyDiv.innerHTML = `
+            <div class="vote-tally">
+                <span class="vote-guilty">${guiltyCount + (playerVote === 'GUILTY' ? 1 : 0)} GUILTY</span>
+                <span class="vote-neutral"> | </span>
+                <span class="vote-notguilty">${notGuiltyCount + (playerVote === 'NOT GUILTY' ? 1 : 0)} NOT GUILTY</span>
+            </div>
+            <div style="font-size: 13px; color: #666; text-align: center;">
+                ${guiltyCount + notGuiltyCount + 1}/12 Voted
+                ${remaining > 0 ? ` | ${remaining} Remaining` : ''}
+            </div>
+        `;
+    }
+
+    // Show tension if there are holdouts
+    if (Math.abs((guiltyCount + (playerVote === 'GUILTY' ? 1 : 0)) - (notGuiltyCount + (playerVote === 'NOT GUILTY' ? 1 : 0))) >= 3) {
+        const tensions = [
+            "There's still significant disagreement in the room...",
+            "The jury remains divided on this verdict...",
+            "Some jurors are digging in on their positions...",
+            "We're not close to consensus yet...",
+            "The debate continues with passion..."
+        ];
+        const tensionDiv = document.getElementById('tension-indicator');
+        if (tensionDiv) {
+            tensionDiv.innerHTML = `<em style="color: #e67e22;">${tensions[Math.floor(Math.random() * tensions.length)]}</em>`;
+        }
+    }
+}
+
+
+
+function enableEvidenceReviewInDeliberation() {
+    const reviewBtn = document.createElement('button');
+    reviewBtn.className = 'evidence-review-button';
+    reviewBtn.textContent = '📋 REVIEW EVIDENCE';
+    reviewBtn.onclick = showEvidenceReviewModal;
+
+    const container = document.getElementById('deliberation-controls');
+    if (container) {
+        container.appendChild(reviewBtn);
+    }
+}
+
+function showEvidenceReviewModal() {
+    // Show evidence summary without interrupting deliberation round
+    const c = gameState.currentCase;
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-height: 600px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3>📋 CASE EVIDENCE REVIEW</h3>
+                <button onclick="this.closest('.modal-overlay').remove()" style="background: #95a5a6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">✕ CLOSE</button>
+            </div>
+            <div style="font-size: 13px; line-height: 1.8;">
+                ${c.evidence.map((e, idx) => `
+                    <div style="margin-bottom: 16px; padding: 12px; background: #f9f9f9; border-left: 4px solid #3498db; border-radius: 4px;">
+                        <strong>${idx + 1}. ${e.name}</strong> (${e.presented})<br>
+                        <em style="color: #666;">${e.description}</em><br>
+                        <span style="color: #27ae60;">Key Point:</span> ${e.keyPoint}<br>
+                        <span style="color: #7f8c8d; font-size: 12px;">Presented by: ${e.witness}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="margin-top: 16px; padding: 12px; background: #e8f5e9; border-radius: 4px; font-size: 13px;">
+                <strong>Note:</strong> Reviewing evidence doesn't consume round time. Take your time to refresh your memory.
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    gameState.evidenceReviewsInDeliberation++;
+}
+
+
+
+function applyPlayerStatementInfluence() {
+    if (!gameState.playerJustification) return;
+
+    const statement = gameState.playerJustification;
+    const jury = gameState.npcConvictions.filter(j => j.id !== 7);
+
+    // Determine statement type and impact
+    const legalKeywords = ['law', 'legal', 'burden', 'proof', 'doubt', 'statute', 'require'];
+    const emotionalKeywords = ['family', 'suffer', 'justice', 'deserve', 'heart', 'sympathy'];
+    const practicalKeywords = ['realistic', 'real', 'simple', 'clear', 'common sense'];
+    const logicalKeywords = ['evidence', 'fact', 'ballistics', 'testimony', 'data', 'prove'];
+
+    let statementType = 'logic';
+    if (legalKeywords.some(k => statement.toLowerCase().includes(k))) statementType = 'legal';
+    if (emotionalKeywords.some(k => statement.toLowerCase().includes(k))) statementType = 'emotional';
+    if (practicalKeywords.some(k => statement.toLowerCase().includes(k))) statementType = 'practical';
+
+    // Apply conviction shifts based on juror personality and statement type
+    jury.forEach(npc => {
+        const susceptibility = npc.profile?.susceptibilities?.[statementType] || 0.5;
+        const shift = 12 * susceptibility;  // 12 point conviction shift for player influence
+
+        // Only shift those not fully entrenched
+        if (npc.conviction > 40 && npc.conviction < 60) {
+            if (gameState.playerVote === 'GUILTY' && npc.conviction < 50) {
+                npc.conviction = Math.min(65, npc.conviction + shift * 0.5);
+            } else if (gameState.playerVote === 'NOT GUILTY' && npc.conviction > 50) {
+                npc.conviction = Math.max(35, npc.conviction - shift * 0.5);
+            }
+        }
+    });
+
+    gameState.playerStatementRound[gameState.round] = {
+        statement: statement,
+        type: statementType,
+        vote: gameState.playerVote
+    };
+}
+
+
+
+
+// ==================== CASE DISTRIBUTION & ABANDONMENT SYSTEM ====================
+/**
+ * Fair case distribution system:
+ * - 25 cases per pack, no repeats until all played
+ * - Abandoned cases get 50% probability (anti-gaming)
+ * - Equal distribution by default (4% each case)
+ */
+
+function initializeCaseProgress() {
+    gameState.caseProgress = {
+        packNumber: 1,
+        completedCases: [],      // Case IDs completed fully
+        abandonedCases: [],      // Case IDs abandoned/quit
+        usedThisRound: [],       // Cases used in current round through pack
+        caseAttempts: {},        // How many times player attempted each case
+        caseOutcomes: {},        // Outcome for each case attempt
+        packProgress: 0,         // 0-25, number of cases completed in pack
+        creditsEarned: 0         // Cumulative credits from pack
+    };
+}
+
+function selectNextCase(packNumber) {
+    packNumber = packNumber || 1;
+
+    // Get all case IDs for this pack (1-25 for pack 1)
+    const allCases = getPackCases(packNumber);
+
+    // Get cases already used this round
+    const usedThisRound = gameState.caseProgress.usedThisRound || [];
+
+    // Filter out used cases
+    const availableCases = allCases.filter(caseId => !usedThisRound.includes(caseId));
+
+    // If all cases used, reset and start new round
+    if (availableCases.length === 0) {
+        gameState.caseProgress.usedThisRound = [];
+        return selectNextCase(packNumber);
+    }
+
+    // Calculate probability weights
+    const weights = calculateCaseWeights(availableCases);
+
+    // Weighted random selection
+    const selectedCase = weightedRandomSelect(availableCases, weights);
+
+    // Mark as used this round
+    gameState.caseProgress.usedThisRound.push(selectedCase);
+
+    return selectedCase;
+}
+
+function getPackCases(packNumber) {
+    // Pack 1: 25 free cases distributed across 5 crime types
+    if (packNumber === 1) {
+        // Return case IDs 1-25 (mapped to casesData array)
+        return Array.from({length: 25}, (_, i) => i + 1);
+    }
+    // Pack 2+ would be implemented later
+    return [];
+}
+
+function calculateCaseWeights(availableCases) {
+    const weights = {};
+
+    availableCases.forEach(caseId => {
+        let weight = 1.0;  // Default weight
+
+        // PENALTY: Abandoned cases get 50% weight
+        if (gameState.caseProgress.abandonedCases.includes(caseId)) {
+            weight = 0.5;
+        }
+
+        // PENALTY: Multiple abandonments get 25% weight
+        const attemptCount = gameState.caseProgress.caseAttempts[caseId] || 0;
+        if (attemptCount > 1 && gameState.caseProgress.abandonedCases.includes(caseId)) {
+            weight = 0.25;
+        }
+
+        weights[caseId] = weight;
+    });
+
+    return weights;
+}
+
+function weightedRandomSelect(cases, weights) {
+    // Calculate total weight
+    const totalWeight = cases.reduce((sum, caseId) => {
+        return sum + (weights[caseId] || 1.0);
+    }, 0);
+
+    // Random selection based on weights
+    let random = Math.random() * totalWeight;
+
+    for (let caseId of cases) {
+        random -= weights[caseId];
+        if (random <= 0) {
+            return caseId;
+        }
+    }
+
+    // Fallback
+    return cases[0];
+}
+
+function recordCaseCompletion(caseId, verdict) {
+    const progress = gameState.caseProgress;
+
+    // Record completion
+    if (!progress.completedCases.includes(caseId)) {
+        progress.completedCases.push(caseId);
+        progress.packProgress++;
+    }
+
+    // Track attempt
+    progress.caseAttempts[caseId] = (progress.caseAttempts[caseId] || 0) + 1;
+
+    // Record outcome
+    progress.caseOutcomes[caseId] = \`COMPLETED_\${verdict}\`;
+
+    // Award credits
+    const creditsEarned = calculateCreditsForCase(caseId, verdict);
+    progress.creditsEarned += creditsEarned;
+    gameState.playerCredits = (gameState.playerCredits || 0) + creditsEarned;
+
+    // Show completion message
+    showCaseCompletionMessage(caseId, verdict, creditsEarned, progress.packProgress);
+}
+
+function recordCaseAbandonment(caseId, round) {
+    const progress = gameState.caseProgress;
+
+    // Record abandonment
+    if (!progress.abandonedCases.includes(caseId)) {
+        progress.abandonedCases.push(caseId);
+    }
+
+    // Track attempt
+    progress.caseAttempts[caseId] = (progress.caseAttempts[caseId] || 0) + 1;
+
+    // Record outcome
+    progress.caseOutcomes[caseId] = \`ABANDONED_ROUND_\${round}\`;
+
+    // Show penalty message
+    showAbandonmentPenaltyMessage(caseId);
+}
+
+function calculateCreditsForCase(caseId, verdict) {
+    // Base credits per case
+    let credits = 100;
+
+    // Bonus for guilty verdict (riskier to convict)
+    if (verdict === 'GUILTY') {
+        credits = 120;
+    }
+
+    // Bonus for challenging cases
+    const caseType = gameState.currentCase?.type;
+    if (caseType === 'BIZARRE' || caseType === 'POLITICAL') {
+        credits += 30;
+    }
+
+    // Bonus for hung jury/mistrial (difficult outcome)
+    if (verdict === 'MISTRIAL') {
+        credits = 50;  // Half credit for mistrial
+    }
+
+    return credits;
+}
+
+function getPackProgress() {
+    const progress = gameState.caseProgress;
+    return {
+        completed: progress.packProgress,
+        abandoned: progress.abandonedCases.length,
+        total: 25,
+        percentComplete: Math.round((progress.packProgress / 25) * 100),
+        nextCase: selectNextCase(1)  // Peek at next case
+    };
+}
+
+function getPackProgressDisplay() {
+    const prog = getPackProgress();
+    return \`
+        <div style="background: #ecf0f1; padding: 12px; border-radius: 4px; margin: 12px 0;">
+            <strong>📊 PACK 1 PROGRESS</strong>
+            <div style="font-size: 13px; color: #666; margin-top: 8px;">
+                Completed: <span style="color: #27ae60; font-weight: bold;">\${prog.completed}/25</span> (\${prog.percentComplete}%)
+                \${prog.abandoned > 0 ? \` | Abandoned: <span style="color: #e67e22; font-weight: bold;">\${prog.abandoned}</span>\` : ''}
+            </div>
+            <div style="background: #fff; border-radius: 3px; overflow: hidden; margin-top: 8px; height: 8px; border: 1px solid #bdc3c7;">
+                <div style="background: linear-gradient(90deg, #27ae60, #2ecc71); height: 100%; width: \${prog.percentComplete}%;"></div>
+            </div>
+        </div>
+    \`;
+}
+
+function showCaseCompletionMessage(caseId, verdict, credits, packProgress) {
+    const messages = {
+        'GUILTY': '✓ GUILTY VERDICT - Justice served',
+        'NOT GUILTY': '✓ NOT GUILTY - Reasonable doubt prevailed',
+        'MISTRIAL': '⚖️ MISTRIAL - Jury hung'
+    };
+
+    const message = messages[verdict] || 'Case completed';
+
+    console.log(\`
+        \${message}
+        Credits Earned: +\${credits}
+        Pack Progress: \${packProgress}/25 cases completed
+    \`);
+}
+
+function showAbandonmentPenaltyMessage(caseId) {
+    console.log(\`
+        ⚠️ CASE ABANDONED
+        This case will appear with REDUCED FREQUENCY (50% likelihood)
+        Try to complete more cases than you abandon for better rewards.
+    \`);
+}
+
+function displayPackProgressUI() {
+    const progressHtml = getPackProgressDisplay();
+    const existingProgress = document.getElementById('pack-progress-display');
+    if (existingProgress) {
+        existingProgress.innerHTML = progressHtml;
+    } else {
+        // Insert after case assignment if element doesn't exist
+        const caseHeader = document.querySelector('.trial-day-header');
+        if (caseHeader) {
+            const div = document.createElement('div');
+            div.id = 'pack-progress-display';
+            div.innerHTML = progressHtml;
+            caseHeader.parentNode.insertBefore(div, caseHeader.nextSibling);
+        }
+    }
+}
+
+
 </script>
 </body>
 </html>
